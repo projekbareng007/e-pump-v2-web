@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -34,7 +35,6 @@ const data = {
       title: "Dashboard",
       url: "/dashboard",
       icon: <LayoutDashboardIcon />,
-      isActive: true,
     },
     {
       title: "User Management",
@@ -47,7 +47,7 @@ const data = {
     },
     {
       title: "Device Management",
-      url: "#",
+      url: "/dashboard/device-management",
       icon: <CpuIcon />,
       // items: [
       //   { title: "All Devices", url: "#" },
@@ -57,7 +57,7 @@ const data = {
     },
     {
       title: "User Activity",
-      url: "#",
+      url: "/dashboard/user-activity",
       icon: <ActivityIcon />,
       // items: [
       //   { title: "Activity Log", url: "#" },
@@ -78,6 +78,16 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname()
+
+  const navItems = data.navMain.map((item) => ({
+    ...item,
+    isActive:
+      item.url === "/dashboard"
+        ? pathname === "/dashboard"
+        : pathname.startsWith(item.url),
+  }))
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -100,7 +110,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
