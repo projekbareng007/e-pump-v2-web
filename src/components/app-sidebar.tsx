@@ -20,73 +20,50 @@ import {
   UsersIcon,
   CpuIcon,
   ActivityIcon,
-  SettingsIcon,
   DropletsIcon,
 } from "lucide-react"
+import { useAuthStore } from "@/stores/auth-store"
 
-const data = {
-  user: {
-    name: "Admin",
-    email: "admin@hydrostream.io",
-    avatar: "",
+const navMain = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: <LayoutDashboardIcon />,
   },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: <LayoutDashboardIcon />,
-    },
-    {
-      title: "User Management",
-      url: "/dashboard/user-management",
-      icon: <UsersIcon />,
-      // items: [
-      //   { title: "All Users", url: "#" },
-      //   { title: "Roles & Permissions", url: "#" },
-      // ],
-    },
-    {
-      title: "Device Management",
-      url: "/dashboard/device-management",
-      icon: <CpuIcon />,
-      // items: [
-      //   { title: "All Devices", url: "#" },
-      //   { title: "Clusters", url: "#" },
-      //   { title: "Firmware", url: "#" },
-      // ],
-    },
-    {
-      title: "User Activity",
-      url: "/dashboard/user-activity",
-      icon: <ActivityIcon />,
-      // items: [
-      //   { title: "Activity Log", url: "#" },
-      //   { title: "Audit Trail", url: "#" },
-      // ],
-    },
-    // {
-    //   title: "Settings",
-    //   url: "#",
-    //   icon: <SettingsIcon />,
-    //   items: [
-    //     { title: "General", url: "#" },
-    //     { title: "Notifications", url: "#" },
-    //     { title: "Integrations", url: "#" },
-    //   ],
-    // },
-  ],
-}
+  {
+    title: "User Management",
+    url: "/dashboard/user-management",
+    icon: <UsersIcon />,
+  },
+  {
+    title: "Device Management",
+    url: "/dashboard/device-management",
+    icon: <CpuIcon />,
+  },
+  {
+    title: "User Activity",
+    url: "/dashboard/user-activity",
+    icon: <ActivityIcon />,
+  },
+]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const storeUser = useAuthStore((s) => s.user)
 
-  const navItems = data.navMain.map((item) => ({
+  const navItems = navMain.map((item) => ({
     ...item,
     isActive:
       item.url === "/dashboard"
         ? pathname === "/dashboard"
         : pathname.startsWith(item.url),
   }))
+
+  const user = {
+    name: storeUser?.nama ?? "Guest",
+    email: storeUser?.email ?? "",
+    avatar: "",
+  }
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -113,7 +90,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

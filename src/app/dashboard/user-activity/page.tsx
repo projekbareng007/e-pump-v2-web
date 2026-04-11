@@ -1,4 +1,4 @@
-import UserActivityView from "@/view/dashboard/user-activity-view"
+import UserActivityView from "@/view/dashboard/activity/user-activity-view"
 
 export default function UserActivityPage() {
   return <UserActivityView />

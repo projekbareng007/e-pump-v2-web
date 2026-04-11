@@ -1,6 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation } from "@tanstack/react-query";
+import { jwtDecode } from "jwt-decode";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,10 +27,78 @@ import {
   ArrowRight,
   Droplets,
   Shield,
+  Loader2,
 } from "lucide-react";
+
+import { authService } from "@/services/auth-service";
+import { useAuthStore } from "@/stores/auth-store";
+import type { UserResponse } from "@/types";
+
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
+interface JwtPayload {
+  sub: string;
+  nama: string;
+  email: string;
+  role: string;
+  exp: number;
+}
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+  const setUser = useAuthStore((s) => s.setUser);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: authService.login,
+    onSuccess: ({ data }) => {
+      const token = data.access_token;
+
+      // Decode JWT to extract user info
+      const decoded = jwtDecode<JwtPayload>(token);
+      const user: UserResponse = {
+        id: decoded.sub,
+        nama: decoded.nama,
+        email: decoded.email,
+        role: decoded.role,
+        created_at: new Date().toISOString(),
+      };
+
+      // Persist in zustand store (localStorage)
+      setUser(user, token);
+
+      // Set cookie for middleware to read
+      document.cookie = `auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+
+      toast.success("Login successful", {
+        description: `Welcome back, ${user.nama}!`,
+      });
+
+      router.push("/dashboard");
+    },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.detail || "Invalid email or password";
+      toast.error("Login failed", { description: message });
+    },
+  });
+
+  const onSubmit = (values: LoginFormValues) => {
+    loginMutation.mutate(values);
+  };
 
   return (
     <div className="bg-background font-body text-on-surface min-h-screen flex items-center justify-center relative overflow-hidden">
@@ -50,10 +126,7 @@ export default function LoginPage() {
           </CardHeader>
 
           <CardContent className="px-8 md:px-12 pt-10 pb-0">
-            <form
-              className="space-y-6"
-              onSubmit={(e) => e.preventDefault()}
-            >
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
               {/* Email Field */}
               <div className="space-y-2">
                 <Label
@@ -70,9 +143,13 @@ export default function LoginPage() {
                     id="email"
                     type="email"
                     placeholder="name@company.com"
+                    {...register("email")}
                     className="h-auto pl-12 pr-4 py-3.5 bg-surface-container border-none rounded-lg font-body text-sm text-on-surface placeholder:text-outline focus-visible:ring-2 focus-visible:ring-primary/40"
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-xs text-red-500">{errors.email.message}</p>
+                )}
               </div>
 
               {/* Password Field */}
@@ -99,6 +176,7 @@ export default function LoginPage() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
+                    {...register("password")}
                     className="h-auto pl-12 pr-12 py-3.5 bg-surface-container border-none rounded-lg font-body text-sm text-on-surface placeholder:text-outline focus-visible:ring-2 focus-visible:ring-primary/40"
                   />
                   <button
@@ -113,6 +191,11 @@ export default function LoginPage() {
                     )}
                   </button>
                 </div>
+                {errors.password && (
+                  <p className="text-xs text-red-500">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
               {/* Remember Me */}
@@ -132,10 +215,20 @@ export default function LoginPage() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full h-auto bg-gradient-to-r from-primary to-primary-container text-white py-4 rounded-lg font-heading font-bold text-base shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98] transition-all"
+                disabled={loginMutation.isPending}
+                className="w-full h-auto bg-gradient-to-r from-primary to-primary-container text-white py-4 rounded-lg font-heading font-bold text-base shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98] transition-all disabled:opacity-70"
               >
-                Login to Dashboard
-                <ArrowRight className="size-5 group-hover/button:translate-x-1 transition-transform" />
+                {loginMutation.isPending ? (
+                  <>
+                    <Loader2 className="size-5 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    Login to Dashboard
+                    <ArrowRight className="size-5" />
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>
