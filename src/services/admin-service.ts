@@ -27,6 +27,8 @@ export const adminService = {
   },
 
   getDeviceQr(deviceId: string) {
-    return api.get(`/admin/devices/${deviceId}/qr`);
+    return api.get<Blob>(`/admin/devices/${deviceId}/qr`, {
+      responseType: "blob",
+    });
   },
 };

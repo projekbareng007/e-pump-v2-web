@@ -12,6 +12,7 @@ import DeviceCard from "./module/device-card";
 import DeviceListView from "./module/device-list-view";
 import DeviceFormDialog from "./module/device-form-dialog";
 import DeleteConfirmDialog from "./module/delete-confirm-dialog";
+import QrCodeDialog from "./module/qr-code-dialog";
 import FilterPill from "./module/filter-pill";
 import type { DeviceResponse } from "@/types";
 
@@ -23,6 +24,7 @@ export default function DeviceManagementView() {
   const [formOpen, setFormOpen] = useState(false);
   const [editDevice, setEditDevice] = useState<DeviceResponse | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [qrDeviceId, setQrDeviceId] = useState<string | null>(null);
 
   const { data: devices, isLoading } = useDevices();
 
@@ -138,6 +140,7 @@ export default function DeviceManagementView() {
               device={device}
               onEdit={() => handleEdit(device)}
               onDelete={() => setDeleteId(device.device_id)}
+              onShowQr={() => setQrDeviceId(device.device_id)}
             />
           ))}
           <div
@@ -160,6 +163,7 @@ export default function DeviceManagementView() {
           devices={filtered}
           onEdit={handleEdit}
           onDelete={(id) => setDeleteId(id)}
+          onShowQr={(id) => setQrDeviceId(id)}
         />
       )}
 
@@ -249,6 +253,13 @@ export default function DeviceManagementView() {
           if (!open) setDeleteId(null);
         }}
         deviceId={deleteId}
+      />
+      <QrCodeDialog
+        open={!!qrDeviceId}
+        onOpenChange={(open) => {
+          if (!open) setQrDeviceId(null);
+        }}
+        deviceId={qrDeviceId}
       />
     </div>
   );

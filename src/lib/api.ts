@@ -1,7 +1,15 @@
 import axios from "axios";
 
+// Use the Next.js proxy route in the browser so requests go through
+// the same origin — avoids CORS and keeps the backend URL server-side only.
+// In SSR/Node context fall back to the direct backend URL.
+const baseURL =
+  typeof window !== "undefined"
+    ? "/api/proxy"
+    : process.env.NEXT_PUBLIC_API_URL;
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL,
   headers: {
     "Content-Type": "application/json",
   },

@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Droplets, Pencil, Trash2 } from "lucide-react";
+import { Droplets, Pencil, QrCode, Trash2 } from "lucide-react";
 import { getStyle, formatLastSeen, isUrgent } from "./device-utils";
 import type { DeviceResponse } from "@/types";
 
@@ -9,9 +9,10 @@ interface DeviceCardProps {
   device: DeviceResponse;
   onEdit: () => void;
   onDelete: () => void;
+  onShowQr: () => void;
 }
 
-export default function DeviceCard({ device, onEdit, onDelete }: DeviceCardProps) {
+export default function DeviceCard({ device, onEdit, onDelete, onShowQr }: DeviceCardProps) {
   const style = getStyle(device.status_pompa);
   const lastSeen = formatLastSeen(device.last_seen);
   const urgent = isUrgent(device.last_seen);
@@ -52,6 +53,13 @@ export default function DeviceCard({ device, onEdit, onDelete }: DeviceCardProps
             </span>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={onShowQr}
+              title="Generate QR Code"
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors"
+            >
+              <QrCode className="size-4" />
+            </button>
             <button
               onClick={onEdit}
               className="w-10 h-10 rounded-full flex items-center justify-center bg-[#ffdbcb] text-tertiary hover:bg-tertiary-container hover:text-white transition-colors"

@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Droplets, Pencil, Trash2 } from "lucide-react";
+import { Droplets, Pencil, QrCode, Trash2 } from "lucide-react";
 import { getStyle, formatLastSeen, isUrgent } from "./device-utils";
 import type { DeviceResponse } from "@/types";
 
@@ -17,9 +17,10 @@ interface DeviceListViewProps {
   devices: DeviceResponse[];
   onEdit: (d: DeviceResponse) => void;
   onDelete: (id: string) => void;
+  onShowQr: (id: string) => void;
 }
 
-export default function DeviceListView({ devices, onEdit, onDelete }: DeviceListViewProps) {
+export default function DeviceListView({ devices, onEdit, onDelete, onShowQr }: DeviceListViewProps) {
   return (
     <Card className="bg-surface-container-lowest border-none rounded-2xl shadow-sm border border-outline-variant/10 overflow-hidden">
       <Table>
@@ -92,6 +93,13 @@ export default function DeviceListView({ devices, onEdit, onDelete }: DeviceList
                   </TableCell>
                   <TableCell className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => onShowQr(device.device_id)}
+                        title="Generate QR Code"
+                        className="w-9 h-9 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors"
+                      >
+                        <QrCode className="size-3.5" />
+                      </button>
                       <button
                         onClick={() => onEdit(device)}
                         className="w-9 h-9 rounded-full flex items-center justify-center bg-[#ffdbcb] text-tertiary hover:bg-tertiary-container hover:text-white transition-colors"
