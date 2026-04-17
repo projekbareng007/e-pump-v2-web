@@ -6,13 +6,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -28,76 +26,64 @@ import {
   Droplets,
   Shield,
   Loader2,
+  User,
 } from "lucide-react";
 
 import { authService } from "@/services/auth-service";
-import { useAuthStore } from "@/stores/auth-store";
-import type { UserResponse } from "@/types";
 
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
-});
+const registerSchema = z
+  .object({
+    nama: z
+      .string()
+      .min(1, "Full name is required")
+      .max(100, "Name must be 100 characters or less"),
+    email: z.string().email("Please enter a valid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
-interface JwtPayload {
-  sub: string;
-  nama: string;
-  email: string;
-  role: string;
-  exp: number;
-}
-
-export default function LoginPage() {
+export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
   });
 
-  const loginMutation = useMutation({
-    mutationFn: authService.login,
-    onSuccess: ({ data }) => {
-      const token = data.access_token;
-
-      // Decode JWT to extract user info
-      const decoded = jwtDecode<JwtPayload>(token);
-      const user: UserResponse = {
-        id: decoded.sub,
-        nama: decoded.nama,
-        email: decoded.email,
-        role: decoded.role,
-        created_at: new Date().toISOString(),
-      };
-
-      // Persist in zustand store (localStorage)
-      setUser(user, token);
-
-      // Set cookie for middleware to read
-      document.cookie = `auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-
-      toast.success("Login successful", {
-        description: `Welcome back, ${user.nama}!`,
+  const registerMutation = useMutation({
+    mutationFn: ({ nama, email, password }: Omit<RegisterFormValues, "confirmPassword">) =>
+      authService.register({ nama, email, password }),
+    onSuccess: () => {
+      toast.success("Account created", {
+        description: "Your account is ready. Please sign in.",
       });
-
-      router.push("/dashboard");
+      router.push("/");
     },
     onError: (error: any) => {
-      const message =
-        error?.response?.data?.detail || "Invalid email or password";
-      toast.error("Login failed", { description: message });
+      const detail = error?.response?.data?.detail;
+      // 422: FastAPI returns an array of ValidationError objects
+      const message = Array.isArray(detail)
+        ? detail.map((e: { msg: string }) => e.msg).join(", ")
+        : typeof detail === "string"
+          ? detail
+          : "Registration failed. Please try again.";
+      toast.error("Registration failed", { description: message });
     },
   });
 
-  const onSubmit = (values: LoginFormValues) => {
-    loginMutation.mutate(values);
+  const onSubmit = ({ nama, email, password }: RegisterFormValues) => {
+    registerMutation.mutate({ nama, email, password });
   };
 
   return (
@@ -109,7 +95,7 @@ export default function LoginPage() {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/5 rounded-full blur-[120px]" />
 
-      <main className="relative z-10 w-full max-w-[440px] px-6">
+      <main className="relative z-10 w-full max-w-[440px] px-6 py-10">
         {/* Auth Card */}
         <Card className="bg-surface-container-lowest border-none shadow-[0_32px_64px_-12px_rgba(25,28,30,0.06)] rounded-xl">
           <CardHeader className="flex flex-col items-center pb-0 pt-8 md:pt-12 px-8 md:px-12">
@@ -118,15 +104,40 @@ export default function LoginPage() {
               <Droplets className="size-8 text-on-primary" />
             </div>
             <h1 className="font-heading text-3xl font-extrabold text-on-surface tracking-tight">
-              Welcome back
+              Create account
             </h1>
-            <p className="text-on-surface-variant font-body text-sm mt-2">
-              Access your IoT Control Center
+            <p className="text-on-surface-variant font-body text-sm mt-2 text-center">
+              Join HydroStream and start monitoring your IoT fleet
             </p>
           </CardHeader>
 
           <CardContent className="px-8 md:px-12 pt-10 pb-0">
             <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+              {/* Full Name Field */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="nama"
+                  className="text-[0.75rem] font-bold uppercase tracking-wider text-on-surface-variant"
+                >
+                  Full Name
+                </Label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <User className="size-5 text-outline group-focus-within:text-primary transition-colors" />
+                  </div>
+                  <Input
+                    id="nama"
+                    type="text"
+                    placeholder="Your full name"
+                    {...register("nama")}
+                    className="h-auto pl-12 pr-4 py-3.5 bg-surface-container border-none rounded-lg font-body text-sm text-on-surface placeholder:text-outline focus-visible:ring-2 focus-visible:ring-primary/40"
+                  />
+                </div>
+                {errors.nama && (
+                  <p className="text-xs text-red-500">{errors.nama.message}</p>
+                )}
+              </div>
+
               {/* Email Field */}
               <div className="space-y-2">
                 <Label
@@ -154,20 +165,12 @@ export default function LoginPage() {
 
               {/* Password Field */}
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label
-                    htmlFor="password"
-                    className="text-[0.75rem] font-bold uppercase tracking-wider text-on-surface-variant"
-                  >
-                    Password
-                  </Label>
-                  <a
-                    href="#"
-                    className="text-[0.75rem] font-bold text-primary hover:text-primary-container transition-colors"
-                  >
-                    Forgot Password?
-                  </a>
-                </div>
+                <Label
+                  htmlFor="password"
+                  className="text-[0.75rem] font-bold uppercase tracking-wider text-on-surface-variant"
+                >
+                  Password
+                </Label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <Lock className="size-5 text-outline group-focus-within:text-primary transition-colors" />
@@ -175,7 +178,7 @@ export default function LoginPage() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder="Min. 6 characters"
                     {...register("password")}
                     className="h-auto pl-12 pr-12 py-3.5 bg-surface-container border-none rounded-lg font-body text-sm text-on-surface placeholder:text-outline focus-visible:ring-2 focus-visible:ring-primary/40"
                   />
@@ -192,40 +195,62 @@ export default function LoginPage() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-red-500">
-                    {errors.password.message}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.password.message}</p>
                 )}
               </div>
 
-              {/* Remember Me */}
-              <div className="flex items-center space-x-3 py-1">
-                <Checkbox
-                  id="remember"
-                  className="size-5 rounded border-outline-variant bg-surface-container data-[state=checked]:bg-primary data-[state=checked]:text-on-primary"
-                />
+              {/* Confirm Password Field */}
+              <div className="space-y-2">
                 <Label
-                  htmlFor="remember"
-                  className="text-sm text-on-surface-variant font-body font-normal cursor-pointer"
+                  htmlFor="confirmPassword"
+                  className="text-[0.75rem] font-bold uppercase tracking-wider text-on-surface-variant"
                 >
-                  Remember this device
+                  Confirm Password
                 </Label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Lock className="size-5 text-outline group-focus-within:text-primary transition-colors" />
+                  </div>
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirm ? "text" : "password"}
+                    placeholder="Re-enter your password"
+                    {...register("confirmPassword")}
+                    className="h-auto pl-12 pr-12 py-3.5 bg-surface-container border-none rounded-lg font-body text-sm text-on-surface placeholder:text-outline focus-visible:ring-2 focus-visible:ring-primary/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-on-surface transition-colors"
+                  >
+                    {showConfirm ? (
+                      <EyeOff className="size-5" />
+                    ) : (
+                      <Eye className="size-5" />
+                    )}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-red-500">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
               </div>
 
               {/* Submit Button */}
               <Button
                 type="submit"
-                disabled={loginMutation.isPending}
+                disabled={registerMutation.isPending}
                 className="w-full h-auto bg-gradient-to-r from-primary to-primary-container text-white py-4 rounded-lg font-heading font-bold text-base shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98] transition-all disabled:opacity-70"
               >
-                {loginMutation.isPending ? (
+                {registerMutation.isPending ? (
                   <>
                     <Loader2 className="size-5 animate-spin" />
-                    Signing in...
+                    Creating account...
                   </>
                 ) : (
                   <>
-                    Login to Dashboard
+                    Create Account
                     <ArrowRight className="size-5" />
                   </>
                 )}
@@ -236,12 +261,12 @@ export default function LoginPage() {
           {/* Footer Link */}
           <CardFooter className="flex justify-center pt-8 pb-8 md:pb-12 px-8 md:px-12">
             <p className="text-sm text-on-surface-variant">
-              New to HydroStream?{" "}
+              Already have an account?{" "}
               <a
-                href="/register"
+                href="/"
                 className="font-bold text-primary hover:underline underline-offset-4"
               >
-                Create Account
+                Sign In
               </a>
             </p>
           </CardFooter>

@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const PROTECTED_ROUTES = ["/dashboard"];
-const PUBLIC_ROUTES = ["/"];
+const PUBLIC_ROUTES = ["/", "/register"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -54,6 +54,7 @@ export const config = {
   matcher: [
     // Auth guard paths
     "/",
+    "/register",
     "/dashboard/:path*",
     // Proxy paths
     "/api/proxy/:path*",
