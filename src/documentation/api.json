@@ -1,0 +1,1244 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Smart E-Pump API",
+        "description": "Backend API untuk sistem Smart E-Pump. Memantau dan mengendalikan pompa air secara real-time via MQTT.",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/auth/register": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Registrasi pengguna baru",
+                "description": "Mendaftarkan pengguna baru dengan nama, email, dan password.",
+                "operationId": "register_auth_register_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserRegister"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Login dan dapatkan JWT token",
+                "description": "Login dengan email dan password, mengembalikan JWT access token.",
+                "operationId": "login_auth_login_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserLogin"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Token"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "tags": ["Authentication"],
+                "summary": "Data pengguna yang sedang login",
+                "description": "Mengembalikan data lengkap pengguna berdasarkan JWT token.",
+                "operationId": "get_me_auth_me_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{ "HTTPBearer": [] }]
+            }
+        },
+        "/devices/claim": {
+            "post": {
+                "tags": ["Devices (User)"],
+                "summary": "Klaim perangkat (Scan-to-Claim)",
+                "description": "Scan-to-Claim: Memetakan device_id ke user yang sedang login.\nGagal jika perangkat sudah diklaim oleh pengguna lain.",
+                "operationId": "claim_device_devices_claim_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeviceClaim"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeviceResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{ "HTTPBearer": [] }]
+            }
+        },
+        "/devices/": {
+            "get": {
+                "tags": ["Devices (User)"],
+                "summary": "Daftar perangkat milik pengguna",
+                "description": "Menampilkan semua perangkat yang dimiliki oleh pengguna yang login.",
+                "operationId": "list_my_devices_devices__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/DeviceResponse"
+                                    },
+                                    "type": "array",
+                                    "title": "Response List My Devices Devices  Get"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{ "HTTPBearer": [] }]
+            }
+        },
+        "/telemetry/latest/{device_id}": {
+            "get": {
+                "tags": ["Telemetry"],
+                "summary": "Ambil data sensor terbaru",
+                "description": "Mengambil data telemetry terbaru dari sebuah perangkat.\nPengguna harus menjadi pemilik perangkat tersebut.",
+                "operationId": "get_latest_telemetry_telemetry_latest__device_id__get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "device_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Device Id" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TelemetryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/telemetry/history/{device_id}": {
+            "get": {
+                "tags": ["Telemetry"],
+                "summary": "Ambil data historis sensor",
+                "description": "Mengambil list data historis telemetry dari sebuah perangkat.\nPengguna harus menjadi pemilik perangkat tersebut, kecuali Admin.",
+                "operationId": "get_historical_telemetry_telemetry_history__device_id__get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "device_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Device Id" }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TelemetryResponse"
+                                    },
+                                    "title": "Response Get Historical Telemetry Telemetry History  Device Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/control/{device_id}": {
+            "post": {
+                "tags": ["Control"],
+                "summary": "Kirim perintah ke pompa",
+                "description": "Mengirim perintah kontrol (on/off) ke pompa via MQTT.\nEndpoint ini dilindungi JWT dan memverifikasi bahwa pengguna\nadalah pemilik perangkat sebelum mengirim perintah.",
+                "operationId": "control_pump_control__device_id__post",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "device_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Device Id" }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ControlCommand"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ControlResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/devices/": {
+            "get": {
+                "tags": ["Devices (Admin)"],
+                "summary": "[Admin] Daftar semua perangkat",
+                "description": "Menampilkan semua perangkat yang terdaftar di sistem.",
+                "operationId": "list_all_devices_admin_devices__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/DeviceResponse"
+                                    },
+                                    "type": "array",
+                                    "title": "Response List All Devices Admin Devices  Get"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{ "HTTPBearer": [] }]
+            },
+            "post": {
+                "tags": ["Devices (Admin)"],
+                "summary": "[Admin] Tambah perangkat baru",
+                "description": "Menambahkan perangkat baru secara manual ke sistem.",
+                "operationId": "create_device_admin_devices__post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeviceCreate"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeviceResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{ "HTTPBearer": [] }]
+            }
+        },
+        "/admin/devices/{device_id}": {
+            "get": {
+                "tags": ["Devices (Admin)"],
+                "summary": "[Admin] Detail perangkat",
+                "description": "Mengambil detail sebuah perangkat berdasarkan device_id.",
+                "operationId": "get_device_admin_devices__device_id__get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "device_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Device Id" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeviceResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": ["Devices (Admin)"],
+                "summary": "[Admin] Update perangkat",
+                "description": "Mengubah data perangkat (owner, status pompa).",
+                "operationId": "update_device_admin_devices__device_id__put",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "device_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Device Id" }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeviceUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeviceResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["Devices (Admin)"],
+                "summary": "[Admin] Hapus perangkat",
+                "description": "Menghapus perangkat dari sistem.",
+                "operationId": "delete_device_admin_devices__device_id__delete",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "device_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Device Id" }
+                    }
+                ],
+                "responses": {
+                    "204": { "description": "Successful Response" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/devices/{device_id}/qr": {
+            "get": {
+                "tags": ["Devices (Admin)"],
+                "summary": "[Admin] Generate QR Code untuk perangkat",
+                "description": "Menghasilkan gambar QR Code berisi device_id.",
+                "operationId": "generate_device_qr_admin_devices__device_id__qr_get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "device_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Device Id" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/": {
+            "get": {
+                "tags": ["Users (Admin)"],
+                "summary": "[Admin] Daftar semua pengguna",
+                "description": "Menampilkan semua pengguna yang terdaftar.",
+                "operationId": "list_users_admin_users__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserResponse"
+                                    },
+                                    "type": "array",
+                                    "title": "Response List Users Admin Users  Get"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{ "HTTPBearer": [] }]
+            },
+            "post": {
+                "tags": ["Users (Admin)"],
+                "summary": "[Admin] Tambah pengguna baru",
+                "description": "Menambahkan pengguna baru secara manual.",
+                "operationId": "create_user_admin_users__post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserCreate"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{ "HTTPBearer": [] }]
+            }
+        },
+        "/admin/users/{user_id}": {
+            "get": {
+                "tags": ["Users (Admin)"],
+                "summary": "[Admin] Detail pengguna",
+                "description": "Mengambil detail pengguna berdasarkan ID.",
+                "operationId": "get_user_admin_users__user_id__get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": ["Users (Admin)"],
+                "summary": "[Admin] Update pengguna",
+                "description": "Mengubah data pengguna.",
+                "operationId": "update_user_admin_users__user_id__put",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["Users (Admin)"],
+                "summary": "[Admin] Hapus pengguna",
+                "description": "Menghapus pengguna dari sistem.",
+                "operationId": "delete_user_admin_users__user_id__delete",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": { "description": "Successful Response" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/activity-logs/": {
+            "get": {
+                "tags": ["Activity Logs (Admin)"],
+                "summary": "[Admin] Daftar semua activity log",
+                "description": "Menampilkan semua activity log dengan filter opsional.",
+                "operationId": "list_activity_logs_admin_activity_logs__get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/ActivityCategory"
+                                },
+                                { "type": "null" }
+                            ],
+                            "description": "Filter berdasarkan kategori",
+                            "title": "Category"
+                        },
+                        "description": "Filter berdasarkan kategori"
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [{ "type": "string" }, { "type": "null" }],
+                            "description": "Filter berdasarkan user_id",
+                            "title": "User Id"
+                        },
+                        "description": "Filter berdasarkan user_id"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0,
+                            "title": "Offset"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ActivityLogResponse"
+                                    },
+                                    "title": "Response List Activity Logs Admin Activity Logs  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/activity-logs/count": {
+            "get": {
+                "tags": ["Activity Logs (Admin)"],
+                "summary": "[Admin] Jumlah activity log",
+                "description": "Mengembalikan jumlah total activity log.",
+                "operationId": "count_activity_logs_admin_activity_logs_count_get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/ActivityCategory"
+                                },
+                                { "type": "null" }
+                            ],
+                            "title": "Category"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [{ "type": "string" }, { "type": "null" }],
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/dashboard/users/count": {
+            "get": {
+                "tags": ["Dashboard (Admin)"],
+                "summary": "[Admin] Total jumlah pengguna",
+                "description": "Mengembalikan jumlah total pengguna. Superuser tidak pernah dihitung.",
+                "operationId": "get_users_count_admin_dashboard_users_count_get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/UserFilter",
+                            "description": "Filter jenis pengguna",
+                            "default": "include_admin"
+                        },
+                        "description": "Filter jenis pengguna"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/dashboard/devices/count": {
+            "get": {
+                "tags": ["Dashboard (Admin)"],
+                "summary": "[Admin] Total jumlah perangkat",
+                "description": "Mengembalikan jumlah total perangkat.",
+                "operationId": "get_devices_count_admin_dashboard_devices_count_get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/DeviceFilter",
+                            "description": "Filter status perangkat",
+                            "default": "all"
+                        },
+                        "description": "Filter status perangkat"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "tags": ["Health"],
+                "summary": "Root",
+                "description": "Health check endpoint.",
+                "operationId": "root__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ActivityCategory": {
+                "type": "string",
+                "enum": ["device", "control", "administrative"],
+                "title": "ActivityCategory"
+            },
+            "ActivityLogResponse": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "User Id"
+                    },
+                    "category": {
+                        "$ref": "#/components/schemas/ActivityCategory"
+                    },
+                    "data": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Data"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    }
+                },
+                "type": "object",
+                "required": ["id", "user_id", "category", "data", "created_at"],
+                "title": "ActivityLogResponse"
+            },
+            "ControlCommand": {
+                "properties": {
+                    "action": { "$ref": "#/components/schemas/PumpAction" }
+                },
+                "type": "object",
+                "required": ["action"],
+                "title": "ControlCommand",
+                "description": "Schema for pump control command."
+            },
+            "ControlResponse": {
+                "properties": {
+                    "device_id": { "type": "string", "title": "Device Id" },
+                    "action": { "type": "string", "title": "Action" },
+                    "message": { "type": "string", "title": "Message" }
+                },
+                "type": "object",
+                "required": ["device_id", "action", "message"],
+                "title": "ControlResponse",
+                "description": "Response after sending a control command."
+            },
+            "DeviceClaim": {
+                "properties": {
+                    "device_id": { "type": "string", "title": "Device Id" }
+                },
+                "type": "object",
+                "required": ["device_id"],
+                "title": "DeviceClaim"
+            },
+            "DeviceCreate": {
+                "properties": {
+                    "device_id": { "type": "string", "title": "Device Id" },
+                    "owner_id": {
+                        "anyOf": [
+                            { "type": "string", "format": "uuid" },
+                            { "type": "null" }
+                        ],
+                        "title": "Owner Id"
+                    },
+                    "status_pompa": {
+                        "type": "boolean",
+                        "title": "Status Pompa",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": ["device_id"],
+                "title": "DeviceCreate"
+            },
+            "DeviceFilter": {
+                "type": "string",
+                "enum": ["all", "registered", "unregistered"],
+                "title": "DeviceFilter"
+            },
+            "DeviceResponse": {
+                "properties": {
+                    "device_id": { "type": "string", "title": "Device Id" },
+                    "owner_id": {
+                        "anyOf": [
+                            { "type": "string", "format": "uuid" },
+                            { "type": "null" }
+                        ],
+                        "title": "Owner Id"
+                    },
+                    "status_pompa": {
+                        "type": "boolean",
+                        "title": "Status Pompa"
+                    },
+                    "last_seen": {
+                        "anyOf": [
+                            { "type": "string", "format": "date-time" },
+                            { "type": "null" }
+                        ],
+                        "title": "Last Seen"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "device_id",
+                    "owner_id",
+                    "status_pompa",
+                    "last_seen"
+                ],
+                "title": "DeviceResponse"
+            },
+            "DeviceUpdate": {
+                "properties": {
+                    "owner_id": {
+                        "anyOf": [
+                            { "type": "string", "format": "uuid" },
+                            { "type": "null" }
+                        ],
+                        "title": "Owner Id"
+                    },
+                    "status_pompa": {
+                        "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+                        "title": "Status Pompa"
+                    }
+                },
+                "type": "object",
+                "title": "DeviceUpdate",
+                "description": "Schema for admin updating a device."
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "PumpAction": {
+                "type": "string",
+                "enum": ["on", "off"],
+                "title": "PumpAction"
+            },
+            "TelemetryResponse": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "device_id": { "type": "string", "title": "Device Id" },
+                    "data": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Data"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    }
+                },
+                "type": "object",
+                "required": ["id", "device_id", "data", "created_at"],
+                "title": "TelemetryResponse",
+                "description": "Schema for telemetry API response."
+            },
+            "Token": {
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "title": "Access Token"
+                    },
+                    "token_type": {
+                        "type": "string",
+                        "title": "Token Type",
+                        "default": "bearer"
+                    }
+                },
+                "type": "object",
+                "required": ["access_token"],
+                "title": "Token",
+                "description": "JWT token response."
+            },
+            "UserCreate": {
+                "properties": {
+                    "nama": { "type": "string", "title": "Nama" },
+                    "email": { "type": "string", "title": "Email" },
+                    "password": { "type": "string", "title": "Password" },
+                    "role": {
+                        "type": "string",
+                        "title": "Role",
+                        "default": "user"
+                    }
+                },
+                "type": "object",
+                "required": ["nama", "email", "password"],
+                "title": "UserCreate",
+                "description": "Schema for admin creating a user."
+            },
+            "UserFilter": {
+                "type": "string",
+                "enum": ["user_only", "include_admin"],
+                "title": "UserFilter"
+            },
+            "UserLogin": {
+                "properties": {
+                    "email": { "type": "string", "title": "Email" },
+                    "password": { "type": "string", "title": "Password" }
+                },
+                "type": "object",
+                "required": ["email", "password"],
+                "title": "UserLogin",
+                "description": "Schema for user login."
+            },
+            "UserRegister": {
+                "properties": {
+                    "nama": { "type": "string", "title": "Nama" },
+                    "email": { "type": "string", "title": "Email" },
+                    "password": { "type": "string", "title": "Password" }
+                },
+                "type": "object",
+                "required": ["nama", "email", "password"],
+                "title": "UserRegister",
+                "description": "Schema for user registration."
+            },
+            "UserResponse": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "nama": { "type": "string", "title": "Nama" },
+                    "email": { "type": "string", "title": "Email" },
+                    "role": { "type": "string", "title": "Role" },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    }
+                },
+                "type": "object",
+                "required": ["id", "nama", "email", "role", "created_at"],
+                "title": "UserResponse",
+                "description": "Schema for user response (no password)."
+            },
+            "UserUpdate": {
+                "properties": {
+                    "nama": {
+                        "anyOf": [{ "type": "string" }, { "type": "null" }],
+                        "title": "Nama"
+                    },
+                    "email": {
+                        "anyOf": [{ "type": "string" }, { "type": "null" }],
+                        "title": "Email"
+                    },
+                    "password": {
+                        "anyOf": [{ "type": "string" }, { "type": "null" }],
+                        "title": "Password"
+                    },
+                    "role": {
+                        "anyOf": [{ "type": "string" }, { "type": "null" }],
+                        "title": "Role"
+                    }
+                },
+                "type": "object",
+                "title": "UserUpdate",
+                "description": "Schema for admin updating a user."
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "type": "integer" }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": { "type": "string", "title": "Message" },
+                    "type": { "type": "string", "title": "Error Type" },
+                    "input": { "title": "Input" },
+                    "ctx": { "type": "object", "title": "Context" }
+                },
+                "type": "object",
+                "required": ["loc", "msg", "type"],
+                "title": "ValidationError"
+            }
+        },
+        "securitySchemes": {
+            "HTTPBearer": { "type": "http", "scheme": "bearer" }
+        }
+    }
+}

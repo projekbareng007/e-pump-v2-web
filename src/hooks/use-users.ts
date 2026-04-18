@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { userService } from "@/services/user-service";
-import type { UserRegister, UserUpdateAdmin } from "@/types";
+import type { UserCreate, UserUpdateAdmin } from "@/types";
 
 const USER_KEYS = {
   all: ["users"] as const,
@@ -16,10 +16,18 @@ export function useUsers() {
   });
 }
 
+export function useUser(userId: string | undefined) {
+  return useQuery({
+    queryKey: USER_KEYS.detail(userId ?? ""),
+    queryFn: () => userService.getUser(userId!).then((r) => r.data),
+    enabled: !!userId,
+  });
+}
+
 export function useCreateUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: UserRegister) => userService.createUser(data),
+    mutationFn: (data: UserCreate) => userService.createUser(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: USER_KEYS.list() });
       toast.success("User created successfully");

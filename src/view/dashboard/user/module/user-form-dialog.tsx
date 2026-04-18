@@ -29,7 +29,8 @@ import {
   type UserUpdateForm,
 } from "@/schemas/user.schema";
 import { useCreateUser, useUpdateUser } from "@/hooks/use-users";
-import type { UserResponse } from "@/types";
+import { useAuthStore } from "@/stores/auth-store";
+import { Role, type UserResponse } from "@/types";
 
 interface UserFormDialogProps {
   open: boolean;
@@ -46,6 +47,8 @@ export default function UserFormDialog({
   const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const currentUser = useAuthStore((s) => s.user);
+  const canAssignSuperuser = currentUser?.role === Role.SUPERUSER;
 
   const {
     register,
@@ -57,8 +60,8 @@ export default function UserFormDialog({
   } = useForm<UserCreateForm | UserUpdateForm>({
     resolver: zodResolver(isEdit ? userUpdateSchema : userCreateSchema),
     defaultValues: isEdit
-      ? { nama: "", email: "", role: "user" }
-      : { nama: "", email: "", password: "" },
+      ? { nama: "", email: "", password: "", role: "user" }
+      : { nama: "", email: "", password: "", role: "user" },
   });
 
   const roleValue = watch("role" as keyof UserUpdateForm);
@@ -68,10 +71,11 @@ export default function UserFormDialog({
       reset({
         nama: user.nama,
         email: user.email,
-        role: user.role as "user" | "admin",
+        password: "",
+        role: user.role as "user" | "admin" | "superuser",
       });
     } else {
-      reset({ nama: "", email: "", password: "" });
+      reset({ nama: "", email: "", password: "", role: "user" });
     }
   }, [user, reset]);
 
@@ -80,11 +84,12 @@ export default function UserFormDialog({
       const data = values as UserUpdateForm;
       updateMutation.mutate(
         {
-          userId: user.id,
+          userId: user!.id,
           data: {
             nama: data.nama,
             email: data.email,
             role: data.role,
+            ...(data.password ? { password: data.password } : {}),
           },
         },
         { onSuccess: () => onOpenChange(false) },
@@ -154,57 +159,56 @@ export default function UserFormDialog({
             )}
           </div>
 
-          {/* Password — only for create */}
-          {!isEdit && (
-            <div className="space-y-2">
-              <Label
-                htmlFor="password"
-                className="text-[0.75rem] font-bold uppercase tracking-wider text-on-surface-variant"
-              >
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Min. 6 characters"
-                {...register("password" as any)}
-                className="h-auto py-3 bg-surface-container border-none rounded-lg text-sm focus-visible:ring-2 focus-visible:ring-primary/40"
-              />
-              {"password" in errors && errors.password && (
-                <p className="text-xs text-red-500">
-                  {(errors as any).password.message}
-                </p>
-              )}
-            </div>
-          )}
+          {/* Password */}
+          <div className="space-y-2">
+            <Label
+              htmlFor="password"
+              className="text-[0.75rem] font-bold uppercase tracking-wider text-on-surface-variant"
+            >
+              Password{isEdit && " (leave blank to keep current)"}
+            </Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder={isEdit ? "Enter new password or leave blank" : "Min. 6 characters"}
+              {...register("password" as any)}
+              className="h-auto py-3 bg-surface-container border-none rounded-lg text-sm focus-visible:ring-2 focus-visible:ring-primary/40"
+            />
+            {"password" in errors && errors.password && (
+              <p className="text-xs text-red-500">
+                {(errors as any).password.message}
+              </p>
+            )}
+          </div>
 
-          {/* Role — only for edit */}
-          {isEdit && (
-            <div className="space-y-2">
-              <Label className="text-[0.75rem] font-bold uppercase tracking-wider text-on-surface-variant">
-                Role
-              </Label>
-              <Select
-                value={(roleValue as string) ?? "user"}
-                onValueChange={(v) =>
-                  setValue("role" as any, v as "user" | "admin")
-                }
-              >
-                <SelectTrigger className="h-auto py-3 bg-surface-container border-none rounded-lg text-sm focus-visible:ring-2 focus-visible:ring-primary/40">
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-              {(errors as any).role && (
-                <p className="text-xs text-red-500">
-                  {(errors as any).role.message}
-                </p>
-              )}
-            </div>
-          )}
+          {/* Role */}
+          <div className="space-y-2">
+            <Label className="text-[0.75rem] font-bold uppercase tracking-wider text-on-surface-variant">
+              Role
+            </Label>
+            <Select
+              value={(roleValue as string) ?? "user"}
+              onValueChange={(v) =>
+                setValue("role" as any, v as "user" | "admin" | "superuser")
+              }
+            >
+              <SelectTrigger className="h-auto py-3 bg-surface-container border-none rounded-lg text-sm focus-visible:ring-2 focus-visible:ring-primary/40">
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                {canAssignSuperuser && (
+                  <SelectItem value="superuser">Super Admin</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            {(errors as any).role && (
+              <p className="text-xs text-red-500">
+                {(errors as any).role.message}
+              </p>
+            )}
+          </div>
 
           <DialogFooter className="gap-2">
             <Button

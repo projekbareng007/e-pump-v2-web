@@ -9,4 +9,8 @@ export const authService = {
   login(data: UserLogin) {
     return api.post<Token>("/auth/login", data);
   },
+
+  getMe() {
+    return api.get<UserResponse>("/auth/me");
+  },
 };

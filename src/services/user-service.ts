@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import type { UserResponse, UserUpdateAdmin, UserRegister } from "@/types";
+import type { UserResponse, UserUpdateAdmin, UserCreate } from "@/types";
 
 export const userService = {
   getAllUsers() {
@@ -10,12 +10,12 @@ export const userService = {
     return api.get<UserResponse>(`/admin/users/${userId}`);
   },
 
-  createUser(data: UserRegister) {
-    return api.post<UserResponse>("/auth/register", data);
+  createUser(data: UserCreate) {
+    return api.post<UserResponse>("/admin/users/", data);
   },
 
   updateUser(userId: string, data: UserUpdateAdmin) {
-    return api.patch<UserResponse>(`/admin/users/${userId}`, data);
+    return api.put<UserResponse>(`/admin/users/${userId}`, data);
   },
 
   deleteUser(userId: string) {

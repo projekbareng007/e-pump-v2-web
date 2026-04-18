@@ -23,6 +23,7 @@ import {
   DropletsIcon,
 } from "lucide-react"
 import { useAuthStore } from "@/stores/auth-store"
+import { Role, type UserResponse } from "@/types"
 
 const navMain = [
   {
@@ -44,24 +45,40 @@ const navMain = [
     title: "User Activity",
     url: "/dashboard/user-activity",
     icon: <ActivityIcon />,
+    superuserOnly: true,
   },
 ]
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  initialUser: UserResponse
+}
+
+export function AppSidebar({ initialUser, ...props }: AppSidebarProps) {
   const pathname = usePathname()
+  const setUser = useAuthStore((s) => s.setUser)
   const storeUser = useAuthStore((s) => s.user)
 
-  const navItems = navMain.map((item) => ({
-    ...item,
-    isActive:
-      item.url === "/dashboard"
-        ? pathname === "/dashboard"
-        : pathname.startsWith(item.url),
-  }))
+  React.useEffect(() => {
+    setUser(initialUser)
+  }, [initialUser, setUser])
+
+  const currentUser = storeUser ?? initialUser
+
+  const navItems = navMain
+    .filter(
+      (item) => !item.superuserOnly || currentUser.role === Role.SUPERUSER,
+    )
+    .map((item) => ({
+      ...item,
+      isActive:
+        item.url === "/dashboard"
+          ? pathname === "/dashboard"
+          : pathname.startsWith(item.url),
+    }))
 
   const user = {
-    name: storeUser?.nama ?? "Guest",
-    email: storeUser?.email ?? "",
+    name: currentUser.nama,
+    email: currentUser.email,
     avatar: "",
   }
 

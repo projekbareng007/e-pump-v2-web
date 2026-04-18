@@ -35,9 +35,17 @@ export interface Token {
   token_type: string;
 }
 
+export interface UserCreate {
+  nama: string;
+  email: string;
+  password: string;
+  role?: string;
+}
+
 export interface UserUpdateAdmin {
   nama?: string | null;
   email?: string | null;
+  password?: string | null;
   role?: string | null;
 }
 
@@ -81,6 +89,49 @@ export interface ControlResponse {
   device_id: string;
   action: string;
   message: string;
+}
+
+// ── Activity Log ──
+export enum ActivityCategory {
+  DEVICE = "device",
+  CONTROL = "control",
+  ADMINISTRATIVE = "administrative",
+}
+
+export interface ActivityLogResponse {
+  id: string;
+  user_id: string;
+  category: ActivityCategory;
+  data: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface ActivityLogListQuery {
+  category?: ActivityCategory;
+  user_id?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ActivityLogCountResponse {
+  count: number;
+}
+
+// ── Dashboard ──
+export enum UserFilter {
+  INCLUDE_ADMIN = "include_admin",
+  EXCLUDE_ADMIN = "exclude_admin",
+  ONLY_ADMIN = "only_admin",
+}
+
+export enum DeviceFilter {
+  ALL = "all",
+  CLAIMED = "claimed",
+  UNCLAIMED = "unclaimed",
+}
+
+export interface CountResponse {
+  count: number;
 }
 
 // ── API Error ──

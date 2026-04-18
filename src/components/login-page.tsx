@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -31,8 +30,8 @@ import {
 } from "lucide-react";
 
 import { authService } from "@/services/auth-service";
-import { useAuthStore } from "@/stores/auth-store";
-import type { UserResponse } from "@/types";
+import { setAuthToken, useAuthStore } from "@/stores/auth-store";
+import { Role } from "@/types";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -40,14 +39,6 @@ const loginSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-
-interface JwtPayload {
-  sub: string;
-  nama: string;
-  email: string;
-  role: string;
-  exp: number;
-}
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -63,25 +54,28 @@ export default function LoginPage() {
   });
 
   const loginMutation = useMutation({
-    mutationFn: authService.login,
-    onSuccess: ({ data }) => {
-      const token = data.access_token;
+    mutationFn: async (values: LoginFormValues) => {
+      const loginRes = await authService.login(values);
+      console.log("[login] response:", loginRes.data);
+      const token = loginRes.data?.access_token;
+      console.log("[login] token:", token);
+      if (!token) throw new Error("No access token in login response");
+      setAuthToken(token);
+      console.log("[login] cookie after set:", document.cookie);
 
-      // Decode JWT to extract user info
-      const decoded = jwtDecode<JwtPayload>(token);
-      const user: UserResponse = {
-        id: decoded.sub,
-        nama: decoded.nama,
-        email: decoded.email,
-        role: decoded.role,
-        created_at: new Date().toISOString(),
-      };
+      const { data: user } = await authService.getMe();
+      return user;
+    },
+    onSuccess: (user) => {
+      if (user.role === Role.USER) {
+        useAuthStore.getState().logout();
+        toast.error("Access denied", {
+          description: "This dashboard is available for administrators only.",
+        });
+        return;
+      }
 
-      // Persist in zustand store (localStorage)
-      setUser(user, token);
-
-      // Set cookie for middleware to read
-      document.cookie = `auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      setUser(user);
 
       toast.success("Login successful", {
         description: `Welcome back, ${user.nama}!`,
@@ -90,6 +84,7 @@ export default function LoginPage() {
       router.push("/dashboard");
     },
     onError: (error: any) => {
+      useAuthStore.getState().logout();
       const message =
         error?.response?.data?.detail || "Invalid email or password";
       toast.error("Login failed", { description: message });
