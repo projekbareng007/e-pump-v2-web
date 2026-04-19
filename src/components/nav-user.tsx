@@ -23,9 +23,8 @@ import {
 } from "@/components/ui/sidebar"
 import {
   ChevronsUpDownIcon,
-  BadgeCheckIcon,
-  BellIcon,
   LogOutIcon,
+  UserRoundIcon,
 } from "lucide-react"
 import { useAuthStore } from "@/stores/auth-store"
 
@@ -105,6 +104,21 @@ export function NavUser({
                 </div>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => router.push("/dashboard/profile")}
+              >
+                <UserRoundIcon />
+                Profile
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+
+            <DropdownMenuSeparator />
+
             {/* Logout */}
             <DropdownMenuItem
               className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
