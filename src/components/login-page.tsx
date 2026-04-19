@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -56,12 +55,9 @@ export default function LoginPage() {
   const loginMutation = useMutation({
     mutationFn: async (values: LoginFormValues) => {
       const loginRes = await authService.login(values);
-      console.log("[login] response:", loginRes.data);
       const token = loginRes.data?.access_token;
-      console.log("[login] token:", token);
       if (!token) throw new Error("No access token in login response");
       setAuthToken(token);
-      console.log("[login] cookie after set:", document.cookie);
 
       const { data: user } = await authService.getMe();
       return user;
@@ -193,20 +189,6 @@ export default function LoginPage() {
                 )}
               </div>
 
-              {/* Remember Me */}
-              <div className="flex items-center space-x-3 py-1">
-                <Checkbox
-                  id="remember"
-                  className="size-5 rounded border-outline-variant bg-surface-container data-[state=checked]:bg-primary data-[state=checked]:text-on-primary"
-                />
-                <Label
-                  htmlFor="remember"
-                  className="text-sm text-on-surface-variant font-body font-normal cursor-pointer"
-                >
-                  Remember this device
-                </Label>
-              </div>
-
               {/* Submit Button */}
               <Button
                 type="submit"
@@ -241,23 +223,6 @@ export default function LoginPage() {
             </p>
           </CardFooter>
         </Card>
-
-        {/* System Status Indicator */}
-        <div className="mt-8 flex justify-center items-center gap-6 px-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(0,106,106,0.5)]" />
-            <span className="text-[0.7rem] font-bold uppercase tracking-tighter text-on-surface-variant opacity-70">
-              Cloud System Online
-            </span>
-          </div>
-          <div className="w-px h-3 bg-outline-variant/30" />
-          <div className="flex items-center gap-2">
-            <Shield className="size-3.5 text-outline" />
-            <span className="text-[0.7rem] font-bold uppercase tracking-tighter text-on-surface-variant opacity-70">
-              AES-256 Encrypted
-            </span>
-          </div>
-        </div>
       </main>
 
       {/* Decorative Illustration (Editorial Voice) */}
