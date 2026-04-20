@@ -1,20 +1,11 @@
 import { redirect } from "next/navigation"
 import { AppSidebar } from "@/components/app-sidebar"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { Input } from "@/components/ui/input"
-import { Search, Bell, SunMoon } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { getServerUser } from "@/lib/server-auth"
 import { Role } from "@/types"
 

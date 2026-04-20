@@ -75,7 +75,7 @@ export default function UserManagementView() {
           </h2>
           <p className="text-on-surface-variant mt-2 font-body text-lg">
             Manage access levels and monitor operator permissions for the
-            HydroStream IoT ecosystem.
+            EPump IoT ecosystem.
           </p>
         </div>
         <Button

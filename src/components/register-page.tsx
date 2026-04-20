@@ -23,11 +23,11 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  Droplets,
   Shield,
   Loader2,
   User,
 } from "lucide-react";
+import Image from "next/image";
 
 import { authService } from "@/services/auth-service";
 
@@ -101,13 +101,13 @@ export default function RegisterPage() {
           <CardHeader className="flex flex-col items-center pb-0 pt-8 md:pt-12 px-8 md:px-12">
             {/* Brand Icon */}
             <div className="w-16 h-16 bg-primary-container rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-primary/10">
-              <Droplets className="size-8 text-on-primary" />
+              <Image src="/favicon.png" alt="EPump" width={40} height={40} />
             </div>
             <h1 className="font-heading text-3xl font-extrabold text-on-surface tracking-tight">
               Create account
             </h1>
             <p className="text-on-surface-variant font-body text-sm mt-2 text-center">
-              Join HydroStream and start monitoring your IoT fleet
+              Join EPump and start monitoring your IoT fleet
             </p>
           </CardHeader>
 

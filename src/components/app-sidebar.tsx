@@ -20,8 +20,8 @@ import {
   UsersIcon,
   CpuIcon,
   ActivityIcon,
-  DropletsIcon,
 } from "lucide-react"
+import Image from "next/image"
 import { useAuthStore } from "@/stores/auth-store"
 import { Role, type UserResponse } from "@/types"
 
@@ -88,12 +88,12 @@ export function AppSidebar({ initialUser, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<a href="/dashboard" />}>
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary-container text-on-primary">
-                <DropletsIcon className="size-4" />
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary-container">
+                <Image src="/favicon.png" alt="EPump" width={20} height={20} />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-heading font-bold text-primary">
-                  HydroStream
+                  EPump
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
                   IoT Controller

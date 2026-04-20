@@ -17,7 +17,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "HydroStream Logic",
+  title: "EPump - Dashboard",
   description: "IoT Dashboard for fluid dynamics monitoring",
 };
 

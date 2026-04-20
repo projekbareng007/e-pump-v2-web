@@ -23,10 +23,10 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  Droplets,
   Shield,
   Loader2,
 } from "lucide-react";
+import Image from "next/image";
 
 import { authService } from "@/services/auth-service";
 import { setAuthToken, useAuthStore } from "@/stores/auth-store";
@@ -110,7 +110,7 @@ export default function LoginPage() {
           <CardHeader className="flex flex-col items-center pb-0 pt-8 md:pt-12 px-8 md:px-12">
             {/* Brand Icon */}
             <div className="w-16 h-16 bg-primary-container rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-primary/10">
-              <Droplets className="size-8 text-on-primary" />
+              <Image src="/favicon.png" alt="EPump" width={40} height={40} />
             </div>
             <h1 className="font-heading text-3xl font-extrabold text-on-surface tracking-tight">
               Welcome back
@@ -221,7 +221,7 @@ export default function LoginPage() {
           {/* Footer Link */}
           <CardFooter className="flex justify-center pt-8 pb-8 md:pb-12 px-8 md:px-12">
             <p className="text-sm text-on-surface-variant">
-              New to HydroStream?{" "}
+              New to EPump?{" "}
               <a
                 href="/register"
                 className="font-bold text-primary hover:underline underline-offset-4"
