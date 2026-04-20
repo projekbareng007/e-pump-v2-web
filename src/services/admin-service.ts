@@ -3,11 +3,13 @@ import type {
   DeviceCreate,
   DeviceUpdate,
   DeviceResponse,
+  PaginatedResponse,
+  PaginatedQuery,
 } from "@/types";
 
 export const adminService = {
-  getAllDevices() {
-    return api.get<DeviceResponse[]>("/admin/devices/");
+  getAllDevices(params?: PaginatedQuery) {
+    return api.get<PaginatedResponse<DeviceResponse>>("/admin/devices/", { params });
   },
 
   getDevice(deviceId: string) {

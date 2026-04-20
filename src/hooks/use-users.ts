@@ -12,7 +12,7 @@ const USER_KEYS = {
 export function useUsers() {
   return useQuery({
     queryKey: USER_KEYS.list(),
-    queryFn: () => userService.getAllUsers().then((r) => r.data),
+    queryFn: () => userService.getAllUsers({ page_size: 100 }).then((r) => r.data.items),
   });
 }
 

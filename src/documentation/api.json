@@ -152,25 +152,60 @@
             "get": {
                 "tags": ["Devices (User)"],
                 "summary": "Daftar perangkat milik pengguna",
-                "description": "Menampilkan semua perangkat yang dimiliki oleh pengguna yang login.",
+                "description": "Menampilkan semua perangkat yang dimiliki oleh pengguna yang login dengan pagination.",
                 "operationId": "list_my_devices_devices__get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Nomor halaman",
+                            "default": 1,
+                            "title": "Page"
+                        },
+                        "description": "Nomor halaman"
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "description": "Jumlah item per halaman",
+                            "default": 20,
+                            "title": "Page Size"
+                        },
+                        "description": "Jumlah item per halaman"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "items": {
-                                        "$ref": "#/components/schemas/DeviceResponse"
-                                    },
-                                    "type": "array",
-                                    "title": "Response List My Devices Devices  Get"
+                                    "$ref": "#/components/schemas/PaginatedResponse_DeviceResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
                                 }
                             }
                         }
                     }
-                },
-                "security": [{ "HTTPBearer": [] }]
+                }
             }
         },
         "/telemetry/latest/{device_id}": {
@@ -216,7 +251,7 @@
             "get": {
                 "tags": ["Telemetry"],
                 "summary": "Ambil data historis sensor",
-                "description": "Mengambil list data historis telemetry dari sebuah perangkat.\nPengguna harus menjadi pemilik perangkat tersebut, kecuali Admin.",
+                "description": "Mengambil list data historis telemetry dari sebuah perangkat dengan pagination.\nPengguna harus menjadi pemilik perangkat tersebut, kecuali Admin.",
                 "operationId": "get_historical_telemetry_telemetry_history__device_id__get",
                 "security": [{ "HTTPBearer": [] }],
                 "parameters": [
@@ -227,14 +262,31 @@
                         "schema": { "type": "string", "title": "Device Id" }
                     },
                     {
-                        "name": "limit",
+                        "name": "page",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "default": 100,
-                            "title": "Limit"
-                        }
+                            "minimum": 1,
+                            "description": "Nomor halaman",
+                            "default": 1,
+                            "title": "Page"
+                        },
+                        "description": "Nomor halaman"
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 200,
+                            "minimum": 1,
+                            "description": "Jumlah item per halaman",
+                            "default": 20,
+                            "title": "Page Size"
+                        },
+                        "description": "Jumlah item per halaman"
                     }
                 ],
                 "responses": {
@@ -243,11 +295,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/TelemetryResponse"
-                                    },
-                                    "title": "Response Get Historical Telemetry Telemetry History  Device Id  Get"
+                                    "$ref": "#/components/schemas/PaginatedResponse_TelemetryResponse_"
                                 }
                             }
                         }
@@ -318,40 +366,76 @@
             "get": {
                 "tags": ["Devices (Admin)"],
                 "summary": "[Admin] Daftar semua perangkat",
-                "description": "Menampilkan semua perangkat yang terdaftar di sistem.",
+                "description": "Menampilkan semua perangkat yang terdaftar di sistem dengan pagination.",
                 "operationId": "list_all_devices_admin_devices__get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Nomor halaman",
+                            "default": 1,
+                            "title": "Page"
+                        },
+                        "description": "Nomor halaman"
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "description": "Jumlah item per halaman",
+                            "default": 20,
+                            "title": "Page Size"
+                        },
+                        "description": "Jumlah item per halaman"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "items": {
-                                        "$ref": "#/components/schemas/DeviceResponse"
-                                    },
-                                    "type": "array",
-                                    "title": "Response List All Devices Admin Devices  Get"
+                                    "$ref": "#/components/schemas/PaginatedResponse_DeviceResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
                                 }
                             }
                         }
                     }
-                },
-                "security": [{ "HTTPBearer": [] }]
+                }
             },
             "post": {
                 "tags": ["Devices (Admin)"],
                 "summary": "[Admin] Tambah perangkat baru",
                 "description": "Menambahkan perangkat baru secara manual ke sistem.",
                 "operationId": "create_device_admin_devices__post",
+                "security": [{ "HTTPBearer": [] }],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/DeviceCreate"
                             }
                         }
-                    },
-                    "required": true
+                    }
                 },
                 "responses": {
                     "201": {
@@ -374,8 +458,7 @@
                             }
                         }
                     }
-                },
-                "security": [{ "HTTPBearer": [] }]
+                }
             }
         },
         "/admin/devices/{device_id}": {
@@ -529,40 +612,76 @@
             "get": {
                 "tags": ["Users (Admin)"],
                 "summary": "[Admin] Daftar semua pengguna",
-                "description": "Menampilkan semua pengguna yang terdaftar.",
+                "description": "Menampilkan semua pengguna yang terdaftar dengan pagination.\n\n- Admin: hanya melihat pengguna dengan role 'user'.\n- Superuser: melihat semua pengguna kecuali superuser lain.",
                 "operationId": "list_users_admin_users__get",
+                "security": [{ "HTTPBearer": [] }],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Nomor halaman",
+                            "default": 1,
+                            "title": "Page"
+                        },
+                        "description": "Nomor halaman"
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "description": "Jumlah item per halaman",
+                            "default": 20,
+                            "title": "Page Size"
+                        },
+                        "description": "Jumlah item per halaman"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "items": {
-                                        "$ref": "#/components/schemas/UserResponse"
-                                    },
-                                    "type": "array",
-                                    "title": "Response List Users Admin Users  Get"
+                                    "$ref": "#/components/schemas/PaginatedResponse_UserResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
                                 }
                             }
                         }
                     }
-                },
-                "security": [{ "HTTPBearer": [] }]
+                }
             },
             "post": {
                 "tags": ["Users (Admin)"],
                 "summary": "[Admin] Tambah pengguna baru",
                 "description": "Menambahkan pengguna baru secara manual.",
                 "operationId": "create_user_admin_users__post",
+                "security": [{ "HTTPBearer": [] }],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/UserCreate"
                             }
                         }
-                    },
-                    "required": true
+                    }
                 },
                 "responses": {
                     "201": {
@@ -585,8 +704,7 @@
                             }
                         }
                     }
-                },
-                "security": [{ "HTTPBearer": [] }]
+                }
             }
         },
         "/admin/users/{user_id}": {
@@ -719,7 +837,7 @@
             "get": {
                 "tags": ["Activity Logs (Admin)"],
                 "summary": "[Admin] Daftar semua activity log",
-                "description": "Menampilkan semua activity log dengan filter opsional.",
+                "description": "Menampilkan semua activity log dengan filter opsional dan pagination.",
                 "operationId": "list_activity_logs_admin_activity_logs__get",
                 "security": [{ "HTTPBearer": [] }],
                 "parameters": [
@@ -751,27 +869,31 @@
                         "description": "Filter berdasarkan user_id"
                     },
                     {
-                        "name": "limit",
+                        "name": "page",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "maximum": 1000,
                             "minimum": 1,
-                            "default": 100,
-                            "title": "Limit"
-                        }
+                            "description": "Nomor halaman",
+                            "default": 1,
+                            "title": "Page"
+                        },
+                        "description": "Nomor halaman"
                     },
                     {
-                        "name": "offset",
+                        "name": "page_size",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "minimum": 0,
-                            "default": 0,
-                            "title": "Offset"
-                        }
+                            "maximum": 200,
+                            "minimum": 1,
+                            "description": "Jumlah item per halaman",
+                            "default": 20,
+                            "title": "Page Size"
+                        },
+                        "description": "Jumlah item per halaman"
                     }
                 ],
                 "responses": {
@@ -780,11 +902,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/ActivityLogResponse"
-                                    },
-                                    "title": "Response List Activity Logs Admin Activity Logs  Get"
+                                    "$ref": "#/components/schemas/PaginatedResponse_ActivityLogResponse_"
                                 }
                             }
                         }
@@ -1090,6 +1208,102 @@
                 },
                 "type": "object",
                 "title": "HTTPValidationError"
+            },
+            "PaginatedResponse_ActivityLogResponse_": {
+                "properties": {
+                    "items": {
+                        "items": {
+                            "$ref": "#/components/schemas/ActivityLogResponse"
+                        },
+                        "type": "array",
+                        "title": "Items"
+                    },
+                    "total": { "type": "integer", "title": "Total" },
+                    "page": { "type": "integer", "title": "Page" },
+                    "page_size": { "type": "integer", "title": "Page Size" },
+                    "total_pages": { "type": "integer", "title": "Total Pages" }
+                },
+                "type": "object",
+                "required": [
+                    "items",
+                    "total",
+                    "page",
+                    "page_size",
+                    "total_pages"
+                ],
+                "title": "PaginatedResponse[ActivityLogResponse]"
+            },
+            "PaginatedResponse_DeviceResponse_": {
+                "properties": {
+                    "items": {
+                        "items": {
+                            "$ref": "#/components/schemas/DeviceResponse"
+                        },
+                        "type": "array",
+                        "title": "Items"
+                    },
+                    "total": { "type": "integer", "title": "Total" },
+                    "page": { "type": "integer", "title": "Page" },
+                    "page_size": { "type": "integer", "title": "Page Size" },
+                    "total_pages": { "type": "integer", "title": "Total Pages" }
+                },
+                "type": "object",
+                "required": [
+                    "items",
+                    "total",
+                    "page",
+                    "page_size",
+                    "total_pages"
+                ],
+                "title": "PaginatedResponse[DeviceResponse]"
+            },
+            "PaginatedResponse_TelemetryResponse_": {
+                "properties": {
+                    "items": {
+                        "items": {
+                            "$ref": "#/components/schemas/TelemetryResponse"
+                        },
+                        "type": "array",
+                        "title": "Items"
+                    },
+                    "total": { "type": "integer", "title": "Total" },
+                    "page": { "type": "integer", "title": "Page" },
+                    "page_size": { "type": "integer", "title": "Page Size" },
+                    "total_pages": { "type": "integer", "title": "Total Pages" }
+                },
+                "type": "object",
+                "required": [
+                    "items",
+                    "total",
+                    "page",
+                    "page_size",
+                    "total_pages"
+                ],
+                "title": "PaginatedResponse[TelemetryResponse]"
+            },
+            "PaginatedResponse_UserResponse_": {
+                "properties": {
+                    "items": {
+                        "items": {
+                            "$ref": "#/components/schemas/UserResponse"
+                        },
+                        "type": "array",
+                        "title": "Items"
+                    },
+                    "total": { "type": "integer", "title": "Total" },
+                    "page": { "type": "integer", "title": "Page" },
+                    "page_size": { "type": "integer", "title": "Page Size" },
+                    "total_pages": { "type": "integer", "title": "Total Pages" }
+                },
+                "type": "object",
+                "required": [
+                    "items",
+                    "total",
+                    "page",
+                    "page_size",
+                    "total_pages"
+                ],
+                "title": "PaginatedResponse[UserResponse]"
             },
             "PumpAction": {
                 "type": "string",

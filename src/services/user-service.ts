@@ -1,9 +1,9 @@
 import api from "@/lib/api";
-import type { UserResponse, UserUpdateAdmin, UserCreate } from "@/types";
+import type { UserResponse, UserUpdateAdmin, UserCreate, PaginatedResponse, PaginatedQuery } from "@/types";
 
 export const userService = {
-  getAllUsers() {
-    return api.get<UserResponse[]>("/admin/users/");
+  getAllUsers(params?: PaginatedQuery) {
+    return api.get<PaginatedResponse<UserResponse>>("/admin/users/", { params });
   },
 
   getUser(userId: string) {

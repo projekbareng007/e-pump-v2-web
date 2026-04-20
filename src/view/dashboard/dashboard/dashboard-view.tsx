@@ -94,9 +94,9 @@ export default function DashboardView() {
   });
 
   const adminUsers = useQuery({
-    queryKey: ["dashboard", "users-count", UserFilter.ONLY_ADMIN],
+    queryKey: ["dashboard", "users-count", UserFilter.USER_ONLY],
     queryFn: async () =>
-      (await dashboardService.usersCount(UserFilter.ONLY_ADMIN)).data.count,
+      (await dashboardService.usersCount(UserFilter.USER_ONLY)).data.count,
   });
 
   const totalDevices = useQuery({
@@ -106,25 +106,25 @@ export default function DashboardView() {
   });
 
   const unclaimed = useQuery({
-    queryKey: ["dashboard", "devices-count", DeviceFilter.UNCLAIMED],
+    queryKey: ["dashboard", "devices-count", DeviceFilter.UNREGISTERED],
     queryFn: async () =>
-      (await dashboardService.devicesCount(DeviceFilter.UNCLAIMED)).data.count,
+      (await dashboardService.devicesCount(DeviceFilter.UNREGISTERED)).data.count,
   });
 
   const devicesQuery = useQuery({
     queryKey: ["devices", "all"],
-    queryFn: async () => (await adminService.getAllDevices()).data,
+    queryFn: async () => (await adminService.getAllDevices({ page_size: 100 })).data.items,
   });
 
   const usersQuery = useQuery({
     queryKey: ["users"],
-    queryFn: async () => (await userService.getAllUsers()).data,
+    queryFn: async () => (await userService.getAllUsers({ page_size: 100 })).data.items,
   });
 
   const recentActivities = useQuery({
     queryKey: ["activity-logs", "recent"],
     queryFn: async () =>
-      (await activityLogService.list({ limit: 6, offset: 0 })).data,
+      (await activityLogService.list({ page: 1, page_size: 6 })).data.items,
   });
 
   const activePumps = useMemo(

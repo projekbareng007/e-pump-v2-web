@@ -12,8 +12,8 @@ const DEVICE_KEYS = {
 export function useDevices() {
   return useQuery({
     queryKey: DEVICE_KEYS.list(),
-    queryFn: () => adminService.getAllDevices().then((r) => r.data),
-    refetchInterval: 30_000, // poll every 30s
+    queryFn: () => adminService.getAllDevices({ page_size: 100 }).then((r) => r.data.items),
+    refetchInterval: 30_000,
   });
 }
 

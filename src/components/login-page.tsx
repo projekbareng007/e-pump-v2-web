@@ -41,6 +41,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
 
@@ -65,12 +66,14 @@ export default function LoginPage() {
     onSuccess: (user) => {
       if (user.role === Role.USER) {
         useAuthStore.getState().logout();
+        setLoginError("Access denied. This dashboard is available for administrators only.");
         toast.error("Access denied", {
           description: "This dashboard is available for administrators only.",
         });
         return;
       }
 
+      setLoginError(null);
       setUser(user);
 
       toast.success("Login successful", {
@@ -83,6 +86,7 @@ export default function LoginPage() {
       useAuthStore.getState().logout();
       const message =
         error?.response?.data?.detail || "Invalid email or password";
+      setLoginError(message);
       toast.error("Login failed", { description: message });
     },
   });
@@ -117,7 +121,7 @@ export default function LoginPage() {
           </CardHeader>
 
           <CardContent className="px-8 md:px-12 pt-10 pb-0">
-            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
               {/* Email Field */}
               <div className="space-y-2">
                 <Label
@@ -188,6 +192,10 @@ export default function LoginPage() {
                   </p>
                 )}
               </div>
+
+              {loginError && (
+                <p className="text-xs text-red-500 text-center">{loginError}</p>
+              )}
 
               {/* Submit Button */}
               <Button

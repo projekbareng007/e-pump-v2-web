@@ -52,9 +52,9 @@ export default function ActivityLogTable() {
   const [category, setCategory] = useState<CategoryFilter>(CATEGORY_ALL);
 
   const queryParams = useMemo(() => {
-    const params: { category?: ActivityCategory; limit: number; offset: number } = {
-      limit: PAGE_SIZE,
-      offset: (page - 1) * PAGE_SIZE,
+    const params: { category?: ActivityCategory; page: number; page_size: number } = {
+      page,
+      page_size: PAGE_SIZE,
     };
     if (category !== CATEGORY_ALL) params.category = category;
     return params;
@@ -77,7 +77,7 @@ export default function ActivityLogTable() {
 
   const usersQuery = useQuery({
     queryKey: ["users"],
-    queryFn: async () => (await userService.getAllUsers()).data,
+    queryFn: async () => (await userService.getAllUsers({ page_size: 100 })).data.items,
   });
 
   const userMap = useMemo(() => {
@@ -90,7 +90,7 @@ export default function ActivityLogTable() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
-  const logs = logsQuery.data ?? [];
+  const logs = logsQuery.data?.items ?? [];
 
   const handleCategoryChange = (value: unknown) => {
     if (typeof value !== "string") return;

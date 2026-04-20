@@ -54,7 +54,7 @@ export default function ActivityTrendChart() {
   const { data, isLoading } = useQuery({
     queryKey: ["activity-logs", "trend"],
     queryFn: async () =>
-      (await activityLogService.list({ limit: 1000, offset: 0 })).data,
+      (await activityLogService.list({ page: 1, page_size: 200 })).data.items,
   });
 
   const { buckets, labels, linePath, areaPath } = useMemo(() => {

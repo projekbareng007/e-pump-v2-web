@@ -109,25 +109,38 @@ export interface ActivityLogResponse {
 export interface ActivityLogListQuery {
   category?: ActivityCategory;
   user_id?: string;
-  limit?: number;
-  offset?: number;
+  page?: number;
+  page_size?: number;
 }
 
 export interface ActivityLogCountResponse {
   count: number;
 }
 
+// ── Pagination ──
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface PaginatedQuery {
+  page?: number;
+  page_size?: number;
+}
+
 // ── Dashboard ──
 export enum UserFilter {
   INCLUDE_ADMIN = "include_admin",
-  EXCLUDE_ADMIN = "exclude_admin",
-  ONLY_ADMIN = "only_admin",
+  USER_ONLY = "user_only",
 }
 
 export enum DeviceFilter {
   ALL = "all",
-  CLAIMED = "claimed",
-  UNCLAIMED = "unclaimed",
+  REGISTERED = "registered",
+  UNREGISTERED = "unregistered",
 }
 
 export interface CountResponse {

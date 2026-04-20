@@ -38,12 +38,16 @@ async function forward(req: NextRequest) {
     upstream = await fetch(targetUrl, makeInit());
   }
 
-  const resBody = await upstream.arrayBuffer();
   const resHeaders = new Headers(upstream.headers);
   resHeaders.delete("content-encoding");
   resHeaders.delete("transfer-encoding");
   resHeaders.delete("content-length");
 
+  if (upstream.status === 204 || upstream.status === 205) {
+    return new NextResponse(null, { status: upstream.status, headers: resHeaders });
+  }
+
+  const resBody = await upstream.arrayBuffer();
   return new NextResponse(resBody, {
     status: upstream.status,
     headers: resHeaders,
