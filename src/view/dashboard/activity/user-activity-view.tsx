@@ -61,13 +61,10 @@ export default function UserActivityView() {
     <div className="px-8 py-8 pb-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-6">
         <div>
-          <span className="text-xs font-bold text-primary-container tracking-widest uppercase mb-2 block">
-            System Logs
-          </span>
-          <h2 className="text-4xl font-extrabold font-heading text-on-surface tracking-tight">
+          <h2 className="text-4xl font-heading font-extrabold text-primary tracking-tight mb-2">
             User Activity
           </h2>
-          <p className="text-sm text-on-surface-variant mt-1">
+          <p className="text-on-surface-variant font-body">
             Audit trail of device, control, and administrative actions.
           </p>
         </div>
