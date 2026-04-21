@@ -14,13 +14,17 @@ import DeviceFormDialog from "./module/device-form-dialog";
 import DeleteConfirmDialog from "./module/delete-confirm-dialog";
 import QrCodeDialog from "./module/qr-code-dialog";
 import FilterPill from "./module/filter-pill";
+import PaginationBar from "@/components/ui/pagination-bar";
 import type { DeviceResponse } from "@/types";
 
 type PumpFilter = "all" | "on" | "off";
 
+const PAGE_SIZE = 12;
+
 export default function DeviceManagementView() {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [pumpFilter, setPumpFilter] = useState<PumpFilter>("all");
+  const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
   const [editDevice, setEditDevice] = useState<DeviceResponse | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -38,6 +42,13 @@ export default function DeviceManagementView() {
 
   const activeCount = devices?.filter((d) => d.status_pompa).length ?? 0;
   const totalCount = devices?.length ?? 0;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const from = filtered.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const to = Math.min(safePage * PAGE_SIZE, filtered.length);
+
+  const handleFilterChange = (v: PumpFilter) => { setPumpFilter(v); setPage(1); };
 
   const handleEdit = (device: DeviceResponse) => {
     setEditDevice(device);
@@ -99,7 +110,7 @@ export default function DeviceManagementView() {
         <FilterPill
           label="Pump Status"
           value={pumpFilter}
-          onValueChange={(v) => setPumpFilter(v as PumpFilter)}
+          onValueChange={(v) => handleFilterChange(v as PumpFilter)}
         >
           <SelectItem value="all">All</SelectItem>
           <SelectItem value="on">Active</SelectItem>
@@ -133,38 +144,64 @@ export default function DeviceManagementView() {
           ))}
         </div>
       ) : view === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtered.map((device) => (
-            <DeviceCard
-              key={device.device_id}
-              device={device}
-              onEdit={() => handleEdit(device)}
-              onDelete={() => setDeleteId(device.device_id)}
-              onShowQr={() => setQrDeviceId(device.device_id)}
-            />
-          ))}
-          <div
-            onClick={handleAdd}
-            className="border-2 border-dashed border-outline-variant rounded-2xl p-6 flex flex-col items-center justify-center text-center opacity-60 hover:opacity-100 transition-all cursor-pointer group"
-          >
-            <div className="w-12 h-12 rounded-full border-2 border-outline-variant flex items-center justify-center mb-4 group-hover:border-primary group-hover:text-primary transition-colors">
-              <Plus className="size-6" />
-            </div>
-            <h4 className="font-heading font-bold text-lg mb-1">
-              Provision Device
-            </h4>
-            <p className="text-xs font-body text-on-surface-variant px-4">
-              Register a new controller or sensor to the network
-            </p>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {paginated.map((device) => (
+              <DeviceCard
+                key={device.device_id}
+                device={device}
+                onEdit={() => handleEdit(device)}
+                onDelete={() => setDeleteId(device.device_id)}
+                onShowQr={() => setQrDeviceId(device.device_id)}
+              />
+            ))}
+            {safePage === totalPages && (
+              <div
+                onClick={handleAdd}
+                className="border-2 border-dashed border-outline-variant rounded-2xl p-6 flex flex-col items-center justify-center text-center opacity-60 hover:opacity-100 transition-all cursor-pointer group"
+              >
+                <div className="w-12 h-12 rounded-full border-2 border-outline-variant flex items-center justify-center mb-4 group-hover:border-primary group-hover:text-primary transition-colors">
+                  <Plus className="size-6" />
+                </div>
+                <h4 className="font-heading font-bold text-lg mb-1">
+                  Provision Device
+                </h4>
+                <p className="text-xs font-body text-on-surface-variant px-4">
+                  Register a new controller or sensor to the network
+                </p>
+              </div>
+            )}
           </div>
-        </div>
+          <div className="mt-6">
+            <PaginationBar
+              page={safePage}
+              totalPages={totalPages}
+              from={from}
+              to={to}
+              total={filtered.length}
+              onPrev={() => setPage((p) => Math.max(1, p - 1))}
+              onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+            />
+          </div>
+        </>
       ) : (
-        <DeviceListView
-          devices={filtered}
-          onEdit={handleEdit}
-          onDelete={(id) => setDeleteId(id)}
-          onShowQr={(id) => setQrDeviceId(id)}
-        />
+        <>
+          <DeviceListView
+            devices={paginated}
+            onEdit={handleEdit}
+            onDelete={(id) => setDeleteId(id)}
+            onShowQr={(id) => setQrDeviceId(id)}
+          />
+          <PaginationBar
+            page={safePage}
+            totalPages={totalPages}
+            from={from}
+            to={to}
+            total={filtered.length}
+            onPrev={() => setPage((p) => Math.max(1, p - 1))}
+            onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+          />
+        </>
       )}
 
       {/* Ecosystem Health */}

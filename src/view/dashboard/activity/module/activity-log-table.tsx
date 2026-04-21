@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
@@ -20,11 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, Filter, Loader2 } from "lucide-react";
+import { Filter, Loader2 } from "lucide-react";
 import { activityLogService } from "@/services/activity-log-service";
 import { userService } from "@/services/user-service";
 import { ActivityCategory } from "@/types";
 import type { UserResponse } from "@/types";
+import PaginationBar from "@/components/ui/pagination-bar";
 import {
   categoryLabels,
   categoryStyles,
@@ -207,34 +207,15 @@ export default function ActivityLogTable() {
         </TableBody>
       </Table>
 
-      <div className="px-8 py-4 bg-surface-container-low/30 border-t border-surface-container flex justify-between items-center">
-        <span className="text-xs text-on-surface-variant font-medium">
-          Showing {from} to {to} of {total} results
-        </span>
-        <div className="flex gap-2 items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="rounded-lg"
-          >
-            <ChevronLeft className="size-5" />
-          </Button>
-          <span className="text-xs font-bold text-on-surface px-2">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="rounded-lg"
-          >
-            <ChevronRight className="size-5" />
-          </Button>
-        </div>
-      </div>
+      <PaginationBar
+        page={page}
+        totalPages={totalPages}
+        from={from}
+        to={to}
+        total={total}
+        onPrev={() => setPage((p) => Math.max(1, p - 1))}
+        onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+      />
     </Card>
   );
 }

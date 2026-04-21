@@ -18,13 +18,17 @@ import { useUsers } from "@/hooks/use-users";
 import UserTable from "./module/user-table";
 import UserFormDialog from "./module/user-form-dialog";
 import UserDeleteDialog from "./module/user-delete-dialog";
+import PaginationBar from "@/components/ui/pagination-bar";
 import type { UserResponse } from "@/types";
+
+const PAGE_SIZE = 10;
 
 type RoleFilter = "all" | "superuser" | "admin" | "user";
 
 export default function UserManagementView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
   const [editUser, setEditUser] = useState<UserResponse | null>(null);
   const [deleteUser, setDeleteUser] = useState<UserResponse | null>(null);
@@ -34,11 +38,7 @@ export default function UserManagementView() {
   const filtered = useMemo(() => {
     if (!users) return [];
     let result = users;
-
-    if (roleFilter !== "all") {
-      result = result.filter((u) => u.role === roleFilter);
-    }
-
+    if (roleFilter !== "all") result = result.filter((u) => u.role === roleFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -48,12 +48,19 @@ export default function UserManagementView() {
           u.role.toLowerCase().includes(q),
       );
     }
-
     return result;
   }, [users, roleFilter, searchQuery]);
 
   const totalCount = users?.length ?? 0;
   const adminCount = users?.filter((u) => u.role === "admin").length ?? 0;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const from = filtered.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const to = Math.min(safePage * PAGE_SIZE, filtered.length);
+
+  const handleFilterChange = (role: RoleFilter) => { setRoleFilter(role); setPage(1); };
+  const handleSearchChange = (q: string) => { setSearchQuery(q); setPage(1); };
 
   const handleEdit = (user: UserResponse) => {
     setEditUser(user);
@@ -146,14 +153,14 @@ export default function UserManagementView() {
             <Input
               placeholder="Filter by name, email or role..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-12 pr-4 py-3 h-auto rounded-2xl bg-white border border-outline-variant/30 focus-visible:ring-4 focus-visible:ring-primary/10"
             />
           </div>
           <div className="flex items-center gap-3 w-full lg:w-auto">
             <Select
               value={roleFilter}
-              onValueChange={(v) => setRoleFilter((v ?? "all") as RoleFilter)}
+              onValueChange={(v) => handleFilterChange((v ?? "all") as RoleFilter)}
             >
               <SelectTrigger className="bg-white border border-outline-variant/30 rounded-xl px-4 py-3 h-auto flex-1 lg:flex-none">
                 <SelectValue />
@@ -189,11 +196,22 @@ export default function UserManagementView() {
             ))}
           </div>
         ) : (
-          <UserTable
-            users={filtered}
-            onEdit={handleEdit}
-            onDelete={(user) => setDeleteUser(user)}
-          />
+          <>
+            <UserTable
+              users={paginated}
+              onEdit={handleEdit}
+              onDelete={(user) => setDeleteUser(user)}
+            />
+            <PaginationBar
+              page={safePage}
+              totalPages={totalPages}
+              from={from}
+              to={to}
+              total={filtered.length}
+              onPrev={() => setPage((p) => Math.max(1, p - 1))}
+              onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+            />
+          </>
         )}
       </Card>
 
