@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
 } from "@/components/ui/card";
 import {
@@ -218,18 +217,6 @@ export default function LoginPage() {
             </form>
           </CardContent>
 
-          {/* Footer Link */}
-          <CardFooter className="flex justify-center pt-8 pb-8 md:pb-12 px-8 md:px-12">
-            <p className="text-sm text-on-surface-variant">
-              New to EPump?{" "}
-              <a
-                href="/register"
-                className="font-bold text-primary hover:underline underline-offset-4"
-              >
-                Create Account
-              </a>
-            </p>
-          </CardFooter>
         </Card>
       </main>
 
