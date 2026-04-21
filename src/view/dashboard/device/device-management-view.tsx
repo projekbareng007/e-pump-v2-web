@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SelectItem } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, LayoutGrid, List, Router, ArrowRight } from "lucide-react";
+import { Plus, LayoutGrid, List } from "lucide-react";
 
 import { useDevices } from "@/hooks/use-device";
 import DeviceCard from "./module/device-card";
@@ -167,9 +167,9 @@ export default function DeviceManagementView() {
         />
       )}
 
-      {/* Ecosystem Health + Network Map */}
-      <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-primary p-8 rounded-[2rem] text-white flex flex-col justify-between relative overflow-hidden">
+      {/* Ecosystem Health */}
+      <div className="mt-12">
+        <div className="bg-primary p-8 rounded-[2rem] text-white flex flex-col justify-between relative overflow-hidden">
           <div
             className="absolute inset-0 opacity-10 pointer-events-none"
             style={{
@@ -215,24 +215,6 @@ export default function DeviceManagementView() {
               <div className="text-[10px] font-bold uppercase tracking-widest text-white/50">
                 Active Rate
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-surface-container-high rounded-[2rem] p-8 flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <h5 className="font-heading font-bold">Network Map</h5>
-            <Button
-              variant="link"
-              className="text-primary text-sm font-bold p-0 h-auto"
-            >
-              View <ArrowRight className="size-4 ml-1" />
-            </Button>
-          </div>
-          <div className="flex-1 bg-surface-container-lowest rounded-xl overflow-hidden min-h-[160px] flex items-center justify-center text-on-surface-variant/40">
-            <div className="text-center">
-              <Router className="size-12 mx-auto mb-2 opacity-30" />
-              <p className="text-xs font-body">Network topology view</p>
             </div>
           </div>
         </div>
