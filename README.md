@@ -6,7 +6,7 @@ A modern IoT device management dashboard for the Smart E-Pump system. Built with
 
 ## Features
 
-- **Authentication** — Secure login and registration with JWT-based session management
+- **Authentication** — Secure login with JWT-based session management
 - **Dashboard Overview** — Real-time stats: total users, devices, active/inactive pumps with live polling
 - **Device Management** — Full CRUD for IoT pump devices, QR code generation for Scan-to-Claim
 - **User Management** — Admin-level user administration with role-based access control
@@ -93,7 +93,6 @@ bun run format
 src/
 ├── app/                        # Next.js App Router
 │   ├── page.tsx                # Login page
-│   ├── register/               # Register page
 │   ├── dashboard/              # Protected dashboard routes
 │   │   ├── page.tsx            # Dashboard overview
 │   │   ├── device-management/  # Device CRUD
@@ -158,7 +157,7 @@ Documented in [`DESIGN.md`](./DESIGN.md).
 
 ## Authentication Flow
 
-1. Login via `/` or register via `/register`
+1. Login via `/`
 2. JWT stored and decoded client-side via `jwt-decode`
 3. `middleware.ts` guards all `/dashboard/*` routes — unauthenticated → redirect to `/`
 4. API calls proxied through `/api/proxy/[...path]` with auth token attached
