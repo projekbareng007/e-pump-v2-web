@@ -155,12 +155,6 @@ export default function LoginPage() {
                   >
                     Password
                   </Label>
-                  <a
-                    href="#"
-                    className="text-[0.75rem] font-bold text-primary hover:text-primary-container transition-colors"
-                  >
-                    Forgot Password?
-                  </a>
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
