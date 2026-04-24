@@ -28,8 +28,10 @@ import {
   ActivityCategory,
   DeviceFilter,
   UserFilter,
+  Role,
   type UserResponse,
 } from "@/types";
+import { useAuthStore } from "@/stores/auth-store";
 import StatusChip from "./module/status-chip";
 
 function formatRelative(iso: string) {
@@ -74,19 +76,42 @@ function activityIcon(category: ActivityCategory) {
   }
 }
 
-function describeActivity(data: Record<string, unknown>): string {
-  if (!data || Object.keys(data).length === 0) return "—";
+function describeActivityParts(
+  data: Record<string, unknown>,
+  userMap: Map<string, UserResponse>,
+): { key: string; label: string; value: string }[] {
+  if (!data || Object.keys(data).length === 0) return [];
+  const LABELS: Record<string, string> = {
+    device_id: "Device",
+    target_user_id: "User",
+    owner_id: "Owner",
+    status_pompa: "Pump",
+    action: "Action",
+    role: "Role",
+    nama: "Name",
+    email: "Email",
+  };
   return Object.entries(data)
-    .filter(([, v]) => v !== null && v !== undefined)
-    .slice(0, 3)
-    .map(
-      ([k, v]) =>
-        `${k}: ${typeof v === "object" ? JSON.stringify(v) : String(v)}`,
-    )
-    .join(" • ");
+    .filter(([, v]) => v !== null && v !== undefined && v !== "")
+    .slice(0, 4)
+    .map(([k, v]) => {
+      const label = LABELS[k] ?? k.replace(/_/g, " ");
+      let value: string;
+      if ((k === "target_user_id" || k === "owner_id") && typeof v === "string") {
+        value = userMap.get(v)?.nama ?? v.slice(0, 8) + "…";
+      } else if (k === "status_pompa") {
+        value = v ? "On" : "Off";
+      } else {
+        value = typeof v === "object" ? JSON.stringify(v) : String(v);
+      }
+      return { key: k, label, value };
+    });
 }
 
 export default function DashboardView() {
+  const currentUser = useAuthStore((s) => s.user);
+  const isSuperuser = currentUser?.role === Role.SUPERUSER;
+
   const totalUsers = useQuery({
     queryKey: ["dashboard", "users-count", UserFilter.INCLUDE_ADMIN],
     queryFn: async () =>
@@ -266,9 +291,9 @@ export default function DashboardView() {
       </div>
 
       {/* Bento Layout: Table + Activities */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className={`grid grid-cols-1 gap-8 ${isSuperuser ? "lg:grid-cols-3" : "lg:grid-cols-1"}`}>
         {/* Recent Devices Table */}
-        <Card className="lg:col-span-2 bg-surface-container-lowest border-none shadow-[0_32px_64px_-12px_rgba(25,28,30,0.06)] rounded-xl overflow-hidden">
+        <Card className={`${isSuperuser ? "lg:col-span-2" : ""} bg-surface-container-lowest border-none shadow-[0_32px_64px_-12px_rgba(25,28,30,0.06)] rounded-xl overflow-hidden`}>
           <CardHeader className="flex flex-row items-center justify-between p-6 border-b border-surface-container">
             <CardTitle className="font-heading text-xl font-bold text-on-surface">
               Recent Devices
@@ -347,7 +372,7 @@ export default function DashboardView() {
         </Card>
 
         {/* Recent Activities Feed */}
-        <Card className="bg-surface-container-lowest border-none shadow-[0_32px_64px_-12px_rgba(25,28,30,0.06)] rounded-xl flex flex-col">
+        {isSuperuser && <Card className="bg-surface-container-lowest border-none shadow-[0_32px_64px_-12px_rgba(25,28,30,0.06)] rounded-xl flex flex-col">
           <CardHeader className="p-6 border-b border-surface-container">
             <CardTitle className="font-heading text-xl font-bold text-on-surface">
               Recent Activities
@@ -372,8 +397,10 @@ export default function DashboardView() {
             ) : (
               recentActivities.data!.map((log) => {
                 const { bg, Icon } = activityIcon(log.category);
-                const userName =
-                  userMap.get(log.user_id)?.nama ?? "Unknown user";
+                const actor = userMap.get(log.user_id);
+                const isMe = !actor && log.user_id === currentUser?.id;
+                const actorName = actor?.nama ?? (isMe ? currentUser!.nama : "Unknown user");
+                const parts = describeActivityParts(log.data, userMap);
                 return (
                   <div key={log.id} className="flex gap-4">
                     <div
@@ -381,15 +408,27 @@ export default function DashboardView() {
                     >
                       <Icon className="size-5" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-on-surface">
-                        {activityTitle(log.category)}
-                      </p>
-                      <p className="text-xs text-on-surface-variant truncate">
-                        <span className="font-semibold">{userName}</span>
-                        {" — "}
-                        {describeActivity(log.data)}
-                      </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                        <p className="text-sm font-bold text-on-surface">
+                          {activityTitle(log.category)}
+                        </p>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant">
+                          {actorName}
+                        </span>
+                      </div>
+                      {parts.length > 0 ? (
+                        <div className="flex flex-col gap-0.5">
+                          {parts.map(({ key, label, value }) => (
+                            <p key={key} className="text-xs text-on-surface-variant">
+                              <span className="font-bold text-outline uppercase text-[10px] tracking-wider mr-1">{label}</span>
+                              {value}
+                            </p>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-outline italic">No details</p>
+                      )}
                       <p className="text-[10px] uppercase font-bold text-outline mt-1">
                         {formatRelative(log.created_at)}
                       </p>
@@ -407,7 +446,7 @@ export default function DashboardView() {
               View Log History
             </Link>
           </div>
-        </Card>
+        </Card>}
       </div>
     </div>
   );

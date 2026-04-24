@@ -3,19 +3,21 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Droplets, Pencil, QrCode, Trash2 } from "lucide-react";
 import { getStyle, formatLastSeen, isUrgent } from "./device-utils";
-import type { DeviceResponse } from "@/types";
+import type { DeviceResponse, UserResponse } from "@/types";
 
 interface DeviceCardProps {
   device: DeviceResponse;
+  userMap: Map<string, UserResponse>;
   onEdit: () => void;
   onDelete: () => void;
   onShowQr: () => void;
 }
 
-export default function DeviceCard({ device, onEdit, onDelete, onShowQr }: DeviceCardProps) {
+export default function DeviceCard({ device, userMap, onEdit, onDelete, onShowQr }: DeviceCardProps) {
   const style = getStyle(device.status_pompa);
   const lastSeen = formatLastSeen(device.last_seen);
   const urgent = isUrgent(device.last_seen);
+  const ownerName = device.owner_id ? (userMap.get(device.owner_id)?.nama ?? device.owner_id.slice(0, 8) + "…") : "Unclaimed";
 
   return (
     <Card
@@ -41,9 +43,7 @@ export default function DeviceCard({ device, onEdit, onDelete, onShowQr }: Devic
         </h3>
         <p className="text-on-surface-variant text-sm font-body mb-1">
           Owner:{" "}
-          <span className="text-on-surface">
-            {device.owner_id ? `${device.owner_id.slice(0, 8)}...` : "Unclaimed"}
-          </span>
+          <span className="text-on-surface">{ownerName}</span>
         </p>
         <div className="mt-auto pt-6 border-t border-surface-container-low flex items-center justify-between">
           <div className="text-[10px] text-outline font-medium uppercase tracking-tighter">

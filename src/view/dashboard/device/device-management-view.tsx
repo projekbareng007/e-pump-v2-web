@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SelectItem } from "@/components/ui/select";
@@ -8,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, LayoutGrid, List } from "lucide-react";
 
 import { useDevices } from "@/hooks/use-device";
+import { userService } from "@/services/user-service";
 import DeviceCard from "./module/device-card";
 import DeviceListView from "./module/device-list-view";
 import DeviceFormDialog from "./module/device-form-dialog";
@@ -15,7 +17,7 @@ import DeleteConfirmDialog from "./module/delete-confirm-dialog";
 import QrCodeDialog from "./module/qr-code-dialog";
 import FilterPill from "./module/filter-pill";
 import PaginationBar from "@/components/ui/pagination-bar";
-import type { DeviceResponse } from "@/types";
+import type { DeviceResponse, UserResponse } from "@/types";
 
 type PumpFilter = "all" | "on" | "off";
 
@@ -31,6 +33,17 @@ export default function DeviceManagementView() {
   const [qrDeviceId, setQrDeviceId] = useState<string | null>(null);
 
   const { data: devices, isLoading } = useDevices();
+
+  const { data: usersData } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => (await userService.getAllUsers({ page_size: 100 })).data.items,
+  });
+
+  const userMap = useMemo(() => {
+    const map = new Map<string, UserResponse>();
+    usersData?.forEach((u) => map.set(u.id, u));
+    return map;
+  }, [usersData]);
 
   const filtered = useMemo(() => {
     if (!devices) return [];
@@ -150,6 +163,7 @@ export default function DeviceManagementView() {
               <DeviceCard
                 key={device.device_id}
                 device={device}
+                userMap={userMap}
                 onEdit={() => handleEdit(device)}
                 onDelete={() => setDeleteId(device.device_id)}
                 onShowQr={() => setQrDeviceId(device.device_id)}
@@ -188,6 +202,7 @@ export default function DeviceManagementView() {
         <>
           <DeviceListView
             devices={paginated}
+            userMap={userMap}
             onEdit={handleEdit}
             onDelete={(id) => setDeleteId(id)}
             onShowQr={(id) => setQrDeviceId(id)}

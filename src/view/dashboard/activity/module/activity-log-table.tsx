@@ -22,15 +22,17 @@ import {
 import { Filter, Loader2 } from "lucide-react";
 import { activityLogService } from "@/services/activity-log-service";
 import { userService } from "@/services/user-service";
-import { ActivityCategory } from "@/types";
+import { authService } from "@/services/auth-service";
+import { useAuthStore } from "@/stores/auth-store";
+import { ActivityCategory, Role } from "@/types";
 import type { UserResponse } from "@/types";
 import PaginationBar from "@/components/ui/pagination-bar";
 import {
   categoryLabels,
   categoryStyles,
-  describeActivity,
   formatTimestamp,
 } from "./activity-constants";
+import ActivityDescription from "./activity-description";
 
 const PAGE_SIZE = 10;
 const CATEGORY_ALL = "all" as const;
@@ -47,9 +49,81 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+function UserCell({
+  userId,
+  userMap,
+  meId,
+  meRole,
+}: {
+  userId: string;
+  userMap: Map<string, UserResponse>;
+  meId: string | null;
+  meRole: string | null;
+}) {
+  const cached = userMap.get(userId);
+
+  // fetch only when not in userMap
+  const { data: fetched } = useQuery({
+    queryKey: ["user", userId],
+    queryFn: async () => (await userService.getUser(userId)).data,
+    enabled: !cached,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const user = cached ?? fetched;
+  const isMe = userId === meId;
+  const isSuperuser = (user?.role ?? meRole) === Role.SUPERUSER;
+  const displayName = user?.nama ?? (isMe ? "Me" : userId);
+
+  return (
+    <div className="flex items-center gap-3">
+      <Avatar className="size-8">
+        <AvatarFallback className="bg-surface-container text-on-surface text-xs font-bold">
+          {getInitials(displayName)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex flex-col gap-0.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-semibold text-on-surface">
+            {displayName}
+          </span>
+          {isMe && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-primary/15 text-primary">
+              Me
+            </span>
+          )}
+          {isSuperuser && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-tertiary-container text-white">
+              Superadmin
+            </span>
+          )}
+        </div>
+        {user?.email && (
+          <span className="text-xs text-outline">{user.email}</span>
+        )}
+        {!user && !isMe && (
+          <span className="font-mono text-[10px] text-outline">{userId}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ActivityLogTable() {
   const [page, setPage] = useState(1);
   const [category, setCategory] = useState<CategoryFilter>(CATEGORY_ALL);
+
+  const storeUser = useAuthStore((s) => s.user);
+
+  // fallback: fetch /auth/me if store is empty
+  const meQuery = useQuery({
+    queryKey: ["auth-me"],
+    queryFn: async () => (await authService.getMe()).data,
+    enabled: !storeUser,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const me = storeUser ?? meQuery.data ?? null;
 
   const queryParams = useMemo(() => {
     const params: { category?: ActivityCategory; page: number; page_size: number } = {
@@ -160,49 +234,38 @@ export default function ActivityLogTable() {
               </TableCell>
             </TableRow>
           ) : (
-            logs.map((log) => {
-              const user = userMap.get(log.user_id);
-              const displayName = user?.nama ?? log.user_id;
-              return (
-                <TableRow
-                  key={log.id}
-                  className="border-surface-container-low hover:bg-surface-container-low/40 transition-colors"
-                >
-                  <TableCell className="px-8 py-5">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-8">
-                        <AvatarFallback className="bg-surface-container text-on-surface text-xs font-bold">
-                          {getInitials(displayName)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-on-surface">
-                          {displayName}
-                        </span>
-                        {user?.email && (
-                          <span className="text-xs text-outline">
-                            {user.email}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-8 py-5">
-                    <span
-                      className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${categoryStyles[log.category]}`}
-                    >
-                      {categoryLabels[log.category]}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-8 py-5 text-sm text-on-surface-variant">
-                    {describeActivity(log.category, log.data)}
-                  </TableCell>
-                  <TableCell className="px-8 py-5 text-xs text-on-surface-variant whitespace-nowrap">
-                    {formatTimestamp(log.created_at)}
-                  </TableCell>
-                </TableRow>
-              );
-            })
+            logs.map((log) => (
+              <TableRow
+                key={log.id}
+                className="border-surface-container-low hover:bg-surface-container-low/40 transition-colors"
+              >
+                <TableCell className="px-8 py-5">
+                  <UserCell
+                    userId={log.user_id}
+                    userMap={userMap}
+                    meId={me?.id ?? null}
+                    meRole={me?.role ?? null}
+                  />
+                </TableCell>
+                <TableCell className="px-8 py-5">
+                  <span
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${categoryStyles[log.category]}`}
+                  >
+                    {categoryLabels[log.category]}
+                  </span>
+                </TableCell>
+                <TableCell className="px-8 py-5 whitespace-normal break-words max-w-xs">
+                  <ActivityDescription
+                    category={log.category}
+                    data={log.data}
+                    userMap={userMap}
+                  />
+                </TableCell>
+                <TableCell className="px-8 py-5 text-xs text-on-surface-variant whitespace-nowrap">
+                  {formatTimestamp(log.created_at)}
+                </TableCell>
+              </TableRow>
+            ))
           )}
         </TableBody>
       </Table>

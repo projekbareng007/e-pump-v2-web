@@ -11,16 +11,17 @@ import {
 } from "@/components/ui/table";
 import { Droplets, Pencil, QrCode, Trash2 } from "lucide-react";
 import { getStyle, formatLastSeen, isUrgent } from "./device-utils";
-import type { DeviceResponse } from "@/types";
+import type { DeviceResponse, UserResponse } from "@/types";
 
 interface DeviceListViewProps {
   devices: DeviceResponse[];
+  userMap: Map<string, UserResponse>;
   onEdit: (d: DeviceResponse) => void;
   onDelete: (id: string) => void;
   onShowQr: (id: string) => void;
 }
 
-export default function DeviceListView({ devices, onEdit, onDelete, onShowQr }: DeviceListViewProps) {
+export default function DeviceListView({ devices, userMap, onEdit, onDelete, onShowQr }: DeviceListViewProps) {
   return (
     <Card className="bg-surface-container-lowest border-none rounded-2xl shadow-sm border border-outline-variant/10 overflow-hidden">
       <Table>
@@ -71,7 +72,9 @@ export default function DeviceListView({ devices, onEdit, onDelete, onShowQr }: 
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-4 text-sm text-on-surface-variant">
-                    {device.owner_id ? `${device.owner_id.slice(0, 8)}...` : "Unclaimed"}
+                    {device.owner_id
+                      ? (userMap.get(device.owner_id)?.nama ?? device.owner_id.slice(0, 8) + "…")
+                      : "Unclaimed"}
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <div

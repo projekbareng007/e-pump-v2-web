@@ -24,6 +24,7 @@ import {
 } from "@/schemas/device.schema";
 import { useCreateDevice, useUpdateDevice } from "@/hooks/use-device";
 import type { DeviceResponse } from "@/types";
+import OwnerSelect from "./owner-select";
 
 interface DeviceFormDialogProps {
   open: boolean;
@@ -131,18 +132,14 @@ export default function DeviceFormDialog({
               htmlFor="owner_id"
               className="text-[0.75rem] font-bold uppercase tracking-wider text-on-surface-variant"
             >
-              Owner ID{" "}
+              Owner{" "}
               <span className="text-outline font-normal normal-case">
                 (optional)
               </span>
             </Label>
-            <Input
-              id="owner_id"
-              placeholder="UUID of the owner"
-              {...register("owner_id", {
-                setValueAs: (v: string) => (v === "" ? null : v),
-              })}
-              className="h-auto py-3 bg-surface-container border-none rounded-lg text-sm focus-visible:ring-2 focus-visible:ring-primary/40"
+            <OwnerSelect
+              value={watch("owner_id") as string | null}
+              onChange={(v) => setValue("owner_id", v)}
             />
             {errors.owner_id && (
               <p className="text-xs text-red-500">
