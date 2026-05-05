@@ -17,9 +17,13 @@ export async function getServerUser(): Promise<UserResponse | null> {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      cookieStore.delete(TOKEN_COOKIE);
+      return null;
+    }
     return (await res.json()) as UserResponse;
   } catch {
+    cookieStore.delete(TOKEN_COOKIE);
     return null;
   }
 }
